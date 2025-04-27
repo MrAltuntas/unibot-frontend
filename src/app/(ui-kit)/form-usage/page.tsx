@@ -1,6 +1,6 @@
-"use client";
-import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+'use client';
+import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import {
     TextField,
     Button,
@@ -12,40 +12,35 @@ import {
     IconButton,
     InputAdornment,
     Alert,
-    Divider,
-} from "@mui/material";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import EmailIcon from "@mui/icons-material/Email";
+    Divider
+} from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import EmailIcon from '@mui/icons-material/Email';
 import useMutateApi from "@/Hooks/useMutateApi";
 
-type TRegisterForm = {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    passwordConfirmation: string;
-    agreeToTerms: boolean;
-};
+type TRegisterForm =  {
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string,
+    agreeToTerms: boolean
+}
 
-const initialValues: TRegisterForm = {
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    passwordConfirmation: "",
-    agreeToTerms: false,
-};
+const initialValues:TRegisterForm = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    passwordConfirmation: '',
+    agreeToTerms: false
+}
 
 export default function RegisterPage() {
-    const {
-        control,
-        handleSubmit,
-        watch,
-        formState: { errors },
-    } = useForm({
-        defaultValues: initialValues,
+    const { control, handleSubmit, watch, formState: { errors } } = useForm({
+        defaultValues: initialValues
     });
 
     const [showPassword, setShowPassword] = useState(false);
@@ -54,16 +49,16 @@ export default function RegisterPage() {
 
     const [registerApi, registerApiLoading] = useMutateApi({
         apiPath: `/users/create`,
-        method: "POST",
+        method: 'POST',
     });
 
-    const password = watch("password");
+    const password = watch('password');
 
     const onSubmit = async (data: TRegisterForm) => {
         const registerApiResponse = await registerApi(data);
 
         if (registerApiResponse.error === null) {
-            console.log("Form submitted:", registerApiResponse);
+            console.log('Form submitted:', registerApiResponse);
             setIsRegistered(true);
         }
     };
@@ -72,10 +67,7 @@ export default function RegisterPage() {
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
             <Paper className="w-full max-w-md p-8 shadow-lg rounded-lg">
                 <div className="text-center mb-8">
-                    <Typography
-                        variant="h4"
-                        className="text-primary-700 font-bold mb-2"
-                    >
+                    <Typography variant="h4" className="text-primary-700 font-bold mb-2">
                         Create Account
                     </Typography>
                     <Typography variant="body2" className="text-gray-600">
@@ -85,14 +77,10 @@ export default function RegisterPage() {
 
                 {isRegistered ? (
                     <Alert severity="success" className="mb-4">
-                        Registration successful! Check your email to verify your
-                        account.
+                        Registration successful! Check your email to verify your account.
                     </Alert>
                 ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="flex flex-col gap-y-6"
-                    >
+                    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-6">
                         {/* First Name Field */}
                         <Controller
                             name="firstName"
@@ -101,9 +89,8 @@ export default function RegisterPage() {
                                 required: "First name is required",
                                 minLength: {
                                     value: 2,
-                                    message:
-                                        "First name must be at least 2 characters",
-                                },
+                                    message: "First name must be at least 2 characters"
+                                }
                             }}
                             render={({ field }) => (
                                 <TextField
@@ -133,9 +120,8 @@ export default function RegisterPage() {
                                 required: "Last name is required",
                                 minLength: {
                                     value: 2,
-                                    message:
-                                        "Last name must be at least 2 characters",
-                                },
+                                    message: "Last name must be at least 2 characters"
+                                }
                             }}
                             render={({ field }) => (
                                 <TextField
@@ -165,8 +151,8 @@ export default function RegisterPage() {
                                 required: "Email is required",
                                 pattern: {
                                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                    message: "Invalid email address",
-                                },
+                                    message: "Invalid email address"
+                                }
                             }}
                             render={({ field }) => (
                                 <TextField
@@ -196,14 +182,12 @@ export default function RegisterPage() {
                                 required: "Password is required",
                                 minLength: {
                                     value: 8,
-                                    message:
-                                        "Password must be at least 8 characters",
+                                    message: "Password must be at least 8 characters"
                                 },
                                 pattern: {
                                     value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-                                    message:
-                                        "Password must include uppercase, lowercase, number and special character",
-                                },
+                                    message: "Password must include uppercase, lowercase, number and special character"
+                                }
                             }}
                             render={({ field }) => (
                                 <TextField
@@ -219,19 +203,11 @@ export default function RegisterPage() {
                                         endAdornment: (
                                             <InputAdornment position="end">
                                                 <IconButton
-                                                    onClick={() =>
-                                                        setShowPassword(
-                                                            !showPassword
-                                                        )
-                                                    }
+                                                    onClick={() => setShowPassword(!showPassword)}
                                                     edge="end"
                                                     className="text-gray-600"
                                                 >
-                                                    {showPassword ? (
-                                                        <VisibilityOffIcon />
-                                                    ) : (
-                                                        <VisibilityIcon />
-                                                    )}
+                                                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                                 </IconButton>
                                             </InputAdornment>
                                         ),
@@ -246,9 +222,7 @@ export default function RegisterPage() {
                             control={control}
                             rules={{
                                 required: "Please confirm your password",
-                                validate: (value) =>
-                                    value === password ||
-                                    "Passwords do not match",
+                                validate: value => value === password || "Passwords do not match"
                             }}
                             render={({ field }) => (
                                 <TextField
@@ -256,33 +230,19 @@ export default function RegisterPage() {
                                     label="Confirm Password"
                                     variant="outlined"
                                     fullWidth
-                                    type={
-                                        showConfirmPassword
-                                            ? "text"
-                                            : "password"
-                                    }
+                                    type={showConfirmPassword ? "text" : "password"}
                                     error={!!errors.passwordConfirmation}
-                                    helperText={
-                                        errors.passwordConfirmation?.message
-                                    }
+                                    helperText={errors.passwordConfirmation?.message}
                                     className="bg-white"
                                     InputProps={{
                                         endAdornment: (
                                             <InputAdornment position="end">
                                                 <IconButton
-                                                    onClick={() =>
-                                                        setShowConfirmPassword(
-                                                            !showConfirmPassword
-                                                        )
-                                                    }
+                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                                     edge="end"
                                                     className="text-gray-600"
                                                 >
-                                                    {showConfirmPassword ? (
-                                                        <VisibilityOffIcon />
-                                                    ) : (
-                                                        <VisibilityIcon />
-                                                    )}
+                                                    {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                                                 </IconButton>
                                             </InputAdornment>
                                         ),
@@ -295,10 +255,7 @@ export default function RegisterPage() {
                         <Controller
                             name="agreeToTerms"
                             control={control}
-                            rules={{
-                                required:
-                                    "You must agree to terms and conditions",
-                            }}
+                            rules={{ required: "You must agree to terms and conditions" }}
                             render={({ field }) => (
                                 <div>
                                     <FormControlLabel
@@ -310,19 +267,13 @@ export default function RegisterPage() {
                                             />
                                         }
                                         label={
-                                            <Typography
-                                                variant="body2"
-                                                className="text-gray-700"
-                                            >
-                                                I agree to the Terms of Service
-                                                and Privacy Policy
+                                            <Typography variant="body2" className="text-gray-700">
+                                                I agree to the Terms of Service and Privacy Policy
                                             </Typography>
                                         }
                                     />
                                     {errors.agreeToTerms && (
-                                        <FormHelperText error>
-                                            {errors.agreeToTerms.message}
-                                        </FormHelperText>
+                                        <FormHelperText error>{errors.agreeToTerms.message}</FormHelperText>
                                     )}
                                 </div>
                             )}
@@ -341,31 +292,23 @@ export default function RegisterPage() {
                         </Button>
 
                         <Divider className="my-6">
-                            <Typography
-                                variant="body2"
-                                className="text-gray-500 px-2"
-                            >
+                            <Typography variant="body2" className="text-gray-500 px-2">
                                 OR
                             </Typography>
                         </Divider>
 
                         {/* Login Link */}
                         <div className="text-center mt-4">
-                            <Typography
-                                variant="body2"
-                                className="text-gray-600"
-                            >
-                                Already have an account?{" "}
-                                <a
-                                    href="#"
-                                    className="text-primary-600 hover:text-primary-800 font-medium"
-                                >
+                            <Typography variant="body2" className="text-gray-600">
+                                Already have an account?{' '}
+                                <a href="#" className="text-primary-600 hover:text-primary-800 font-medium">
                                     Sign in
                                 </a>
                             </Typography>
                         </div>
                     </form>
                 )}
+
             </Paper>
         </div>
     );
