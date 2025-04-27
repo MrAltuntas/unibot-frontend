@@ -18,7 +18,42 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import EmailIcon from "@mui/icons-material/Email";
+import LockIcon from "@mui/icons-material/Lock";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import useMutateApi from "@/Hooks/useMutateApi";
+
+// Create a common sx style object to apply to all text fields
+const textFieldSx = {
+    "& .MuiInputBase-input": {
+        paddingLeft: "15px",
+    },
+    "& .MuiInputLabel-root:not(.MuiInputLabel-shrink)": {
+        transform: "translate(40px, 16px) scale(1)",
+    },
+    "& .MuiInputLabel-shrink": {
+        marginLeft: 0,
+    },
+    // Fix autofill styling
+    "& input:-webkit-autofill, & input:-webkit-autofill:hover, & input:-webkit-autofill:focus, & input:-webkit-autofill:active":
+        {
+            WebkitBoxShadow: "0 0 0 1000px white inset",
+            WebkitTextFillColor: "inherit",
+            transition: "background-color 5000s ease-in-out 0s",
+        },
+    // Consistent hover styles
+    "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
+        borderColor: "primary.main",
+    },
+    // Consistent focus styles
+    "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+        borderColor: "primary.main",
+    },
+    // Ensure text remains visible during transition
+    "& .MuiInputBase-input, & .MuiInputLabel-root": {
+        transition: "color 0.2s ease-in-out",
+    },
+};
 
 type TRegisterForm = {
     firstName: string;
@@ -39,6 +74,7 @@ const initialValues: TRegisterForm = {
 };
 
 export default function RegisterPage() {
+    const router = useRouter();
     const {
         control,
         handleSubmit,
@@ -51,6 +87,7 @@ export default function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
+    const [registerError, setRegisterError] = useState<string | null>(null);
 
     const [registerApi, registerApiLoading] = useMutateApi({
         apiPath: `/users/create`,
@@ -60,11 +97,34 @@ export default function RegisterPage() {
     const password = watch("password");
 
     const onSubmit = async (data: TRegisterForm) => {
-        const registerApiResponse = await registerApi(data);
+        setRegisterError(null);
 
-        if (registerApiResponse.error === null) {
-            console.log("Form submitted:", registerApiResponse);
-            setIsRegistered(true);
+        try {
+            const registerApiResponse = await registerApi({
+                firstName: data.firstName,
+                lastName: data.lastName,
+                email: data.email,
+                password: data.password,
+                passwordConfirmation: data.passwordConfirmation,
+            });
+
+            if (registerApiResponse.error === null) {
+                setIsRegistered(true);
+
+                setTimeout(() => {
+                    router.push("/login?registered=true");
+                }, 3000);
+            } else {
+                setRegisterError(
+                    registerApiResponse.error.message || "Registration failed"
+                );
+                console.error("Registration error:", registerApiResponse.error);
+            }
+        } catch (error) {
+            setRegisterError(
+                "An unexpected error occurred during registration"
+            );
+            console.error("Registration error:", error);
         }
     };
 
@@ -86,13 +146,19 @@ export default function RegisterPage() {
                 {isRegistered ? (
                     <Alert severity="success" className="mb-4">
                         Registration successful! Check your email to verify your
-                        account.
+                        account. Redirecting to login page...
                     </Alert>
                 ) : (
                     <form
                         onSubmit={handleSubmit(onSubmit)}
                         className="flex flex-col gap-y-6"
                     >
+                        {registerError && (
+                            <Alert severity="error" className="mb-4">
+                                {registerError}
+                            </Alert>
+                        )}
+
                         {/* First Name Field */}
                         <Controller
                             name="firstName"
@@ -121,6 +187,7 @@ export default function RegisterPage() {
                                             </InputAdornment>
                                         ),
                                     }}
+                                    sx={textFieldSx}
                                 />
                             )}
                         />
@@ -153,6 +220,7 @@ export default function RegisterPage() {
                                             </InputAdornment>
                                         ),
                                     }}
+                                    sx={textFieldSx}
                                 />
                             )}
                         />
@@ -184,6 +252,7 @@ export default function RegisterPage() {
                                             </InputAdornment>
                                         ),
                                     }}
+                                    sx={textFieldSx}
                                 />
                             )}
                         />
@@ -216,6 +285,11 @@ export default function RegisterPage() {
                                     helperText={errors.password?.message}
                                     className="bg-white"
                                     InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <LockIcon className="text-gray-500" />
+                                            </InputAdornment>
+                                        ),
                                         endAdornment: (
                                             <InputAdornment position="end">
                                                 <IconButton
@@ -236,6 +310,7 @@ export default function RegisterPage() {
                                             </InputAdornment>
                                         ),
                                     }}
+                                    sx={textFieldSx}
                                 />
                             )}
                         />
@@ -267,6 +342,11 @@ export default function RegisterPage() {
                                     }
                                     className="bg-white"
                                     InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <LockIcon className="text-gray-500" />
+                                            </InputAdornment>
+                                        ),
                                         endAdornment: (
                                             <InputAdornment position="end">
                                                 <IconButton
@@ -287,6 +367,7 @@ export default function RegisterPage() {
                                             </InputAdornment>
                                         ),
                                     }}
+                                    sx={textFieldSx}
                                 />
                             )}
                         />
@@ -335,9 +416,12 @@ export default function RegisterPage() {
                             color="primary"
                             fullWidth
                             size="large"
+                            disabled={registerApiLoading}
                             className="bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-md shadow-md hover:shadow-lg transition-all duration-200"
                         >
-                            Create Account
+                            {registerApiLoading
+                                ? "Creating Account..."
+                                : "Create Account"}
                         </Button>
 
                         <Divider className="my-6">
@@ -356,12 +440,12 @@ export default function RegisterPage() {
                                 className="text-gray-600"
                             >
                                 Already have an account?{" "}
-                                <a
-                                    href="#"
+                                <Link
+                                    href="/login"
                                     className="text-primary-600 hover:text-primary-800 font-medium"
                                 >
                                     Sign in
-                                </a>
+                                </Link>
                             </Typography>
                         </div>
                     </form>
