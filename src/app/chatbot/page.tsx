@@ -6,7 +6,7 @@ export default function Home() {
       <main className="flex min-h-screen flex-col items-center p-24">
         <h1>Landing Page</h1>
         <ChatBot />
-        <p>Welcome to the landing page!</p><div></div>
+        <p>Welcome to the landing page! Hello there.</p><div></div>
       
         {/* Filler content to enable scrolling */}
         <div className="h-[2000px]"></div>
