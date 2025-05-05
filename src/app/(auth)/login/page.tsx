@@ -254,6 +254,7 @@ export default function LoginPage() {
                         className="flex flex-col gap-y-5"
                     >
                         {/* Email Field */}
+                        login\page.tsx
                         <Controller
                             name="email"
                             control={control}
@@ -261,15 +262,17 @@ export default function LoginPage() {
                                 required: "Email is required",
                                 pattern: {
                                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                    message: "Invalid email address",
+                                    message: "Invalid email address format",
                                 },
                             }}
                             render={({ field }) => (
                                 <TextField
                                     {...field}
+                                    id="email-input" // Add unique ID
                                     label="Email Address"
                                     variant="outlined"
                                     fullWidth
+                                    autoComplete="email" // Add autocomplete attribute
                                     error={!!errors.email}
                                     helperText={errors.email?.message}
                                     className="bg-white"
@@ -284,11 +287,15 @@ export default function LoginPage() {
                                         "& .MuiOutlinedInput-root": {
                                             borderRadius: "10px",
                                         },
+                                        "& .MuiInputBase-input": {
+                                            zIndex: 1, // Ensure input is on top
+                                            position: "relative",
+                                        },
+                                        mb: 2, // Add margin bottom
                                     }}
                                 />
                             )}
                         />
-
                         {/* Password Field */}
                         <Controller
                             name="password"
@@ -340,7 +347,6 @@ export default function LoginPage() {
                                 />
                             )}
                         />
-
                         <div className="flex justify-between items-center">
                             {/* Remember Me Checkbox */}
                             <Controller
@@ -375,7 +381,6 @@ export default function LoginPage() {
                                 Forgot password?
                             </Link>
                         </div>
-
                         {/* Submit Button */}
                         <Button
                             type="submit"
@@ -389,7 +394,6 @@ export default function LoginPage() {
                         >
                             {isLoading ? "Signing in..." : "Sign In"}
                         </Button>
-
                         <Divider className="my-6">
                             <Typography
                                 variant="body2"
@@ -398,7 +402,6 @@ export default function LoginPage() {
                                 OR
                             </Typography>
                         </Divider>
-
                         {/* Register Link */}
                         <div className="text-center">
                             <Typography

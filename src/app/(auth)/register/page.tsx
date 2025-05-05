@@ -1,37 +1,40 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useForm, Controller } from "react-hook-form";
 import {
     TextField,
     Button,
+    Typography,
     Checkbox,
     FormControlLabel,
-    Typography,
-    Paper,
     FormHelperText,
     IconButton,
     InputAdornment,
-    Alert,
-    Divider,
     Stepper,
     Step,
     StepLabel,
+    Alert,
+    Divider,
     Box,
+    Container,
+    Paper,
 } from "@mui/material";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import EmailIcon from "@mui/icons-material/Email";
-import LockIcon from "@mui/icons-material/Lock";
-import SchoolIcon from "@mui/icons-material/School";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import {
+    Visibility,
+    VisibilityOff,
+    PersonOutline,
+    Email,
+    Lock,
+    ArrowForward,
+    ArrowBack,
+    School,
+} from "@mui/icons-material";
 import useMutateApi from "@/Hooks/useMutateApi";
 
-type TRegisterForm = {
+type FormValues = {
     firstName: string;
     lastName: string;
     email: string;
@@ -40,7 +43,7 @@ type TRegisterForm = {
     agreeToTerms: boolean;
 };
 
-const initialValues: TRegisterForm = {
+const initialValues: FormValues = {
     firstName: "",
     lastName: "",
     email: "",
@@ -56,8 +59,9 @@ export default function RegisterPage() {
         handleSubmit,
         watch,
         trigger,
-        formState: { errors, isValid },
-    } = useForm({
+        formState: { errors },
+        reset,
+    } = useForm<FormValues>({
         defaultValues: initialValues,
         mode: "onChange",
     });
@@ -84,10 +88,20 @@ export default function RegisterPage() {
         { label: "Confirmation", fields: ["agreeToTerms"] },
     ];
 
+    useEffect(() => {
+        // Reset form errors on component mount to prevent validation errors
+        // from showing before user interaction
+        reset(initialValues, {
+            keepValues: true,
+            keepDirtyValues: true,
+            keepIsValid: false,
+            keepErrors: false,
+        });
+    }, [reset]);
+
     const handleNext = async () => {
         const fieldsToValidate = steps[activeStep].fields;
-        const isStepValid = await trigger(fieldsToValidate as any);
-
+        const isStepValid = await trigger(fieldsToValidate as any[]);
         if (isStepValid) {
             setActiveStep((prevStep) => prevStep + 1);
         }
@@ -97,9 +111,8 @@ export default function RegisterPage() {
         setActiveStep((prevStep) => prevStep - 1);
     };
 
-    const onSubmit = async (data: TRegisterForm) => {
+    const onSubmit = async (data: FormValues) => {
         setRegisterError(null);
-
         try {
             const registerApiResponse = await registerApi({
                 firstName: data.firstName,
@@ -111,7 +124,6 @@ export default function RegisterPage() {
 
             if (registerApiResponse.error === null) {
                 setIsRegistered(true);
-
                 setTimeout(() => {
                     router.push("/login?registered=true");
                 }, 3000);
@@ -134,7 +146,6 @@ export default function RegisterPage() {
             case 0:
                 return (
                     <>
-                        {/* First Name Field */}
                         <Controller
                             name="firstName"
                             control={control}
@@ -158,20 +169,14 @@ export default function RegisterPage() {
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
-                                                <PersonOutlineIcon className="text-gray-500" />
+                                                <PersonOutline className="text-gray-500" />
                                             </InputAdornment>
                                         ),
-                                    }}
-                                    sx={{
-                                        "& .MuiOutlinedInput-root": {
-                                            borderRadius: "10px",
-                                        },
                                     }}
                                 />
                             )}
                         />
 
-                        {/* Last Name Field */}
                         <Controller
                             name="lastName"
                             control={control}
@@ -195,24 +200,19 @@ export default function RegisterPage() {
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
-                                                <PersonOutlineIcon className="text-gray-500" />
+                                                <PersonOutline className="text-gray-500" />
                                             </InputAdornment>
                                         ),
-                                    }}
-                                    sx={{
-                                        "& .MuiOutlinedInput-root": {
-                                            borderRadius: "10px",
-                                        },
                                     }}
                                 />
                             )}
                         />
                     </>
                 );
+
             case 1:
                 return (
                     <>
-                        {/* Email Field */}
                         <Controller
                             name="email"
                             control={control}
@@ -226,29 +226,25 @@ export default function RegisterPage() {
                             render={({ field }) => (
                                 <TextField
                                     {...field}
+                                    id="email-input"
                                     label="Email Address"
                                     variant="outlined"
                                     fullWidth
+                                    autoComplete="email"
                                     error={!!errors.email}
                                     helperText={errors.email?.message}
-                                    className="bg-white"
+                                    className="bg-white mb-4"
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
-                                                <EmailIcon className="text-gray-500" />
+                                                <Email className="text-gray-500" />
                                             </InputAdornment>
                                         ),
-                                    }}
-                                    sx={{
-                                        "& .MuiOutlinedInput-root": {
-                                            borderRadius: "10px",
-                                        },
                                     }}
                                 />
                             )}
                         />
 
-                        {/* Password Field */}
                         <Controller
                             name="password"
                             control={control}
@@ -260,7 +256,7 @@ export default function RegisterPage() {
                                         "Password must be at least 8 characters",
                                 },
                                 pattern: {
-                                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+                                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
                                     message:
                                         "Password must include uppercase, lowercase, number and special character",
                                 },
@@ -268,6 +264,7 @@ export default function RegisterPage() {
                             render={({ field }) => (
                                 <TextField
                                     {...field}
+                                    id="password-input"
                                     label="Password"
                                     variant="outlined"
                                     fullWidth
@@ -278,39 +275,33 @@ export default function RegisterPage() {
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
-                                                <LockIcon className="text-gray-500" />
+                                                <Lock className="text-gray-500" />
                                             </InputAdornment>
                                         ),
                                         endAdornment: (
                                             <InputAdornment position="end">
                                                 <IconButton
+                                                    aria-label="toggle password visibility"
                                                     onClick={() =>
                                                         setShowPassword(
                                                             !showPassword
                                                         )
                                                     }
                                                     edge="end"
-                                                    className="text-gray-600"
                                                 >
                                                     {showPassword ? (
-                                                        <VisibilityOffIcon />
+                                                        <VisibilityOff />
                                                     ) : (
-                                                        <VisibilityIcon />
+                                                        <Visibility />
                                                     )}
                                                 </IconButton>
                                             </InputAdornment>
                                         ),
                                     }}
-                                    sx={{
-                                        "& .MuiOutlinedInput-root": {
-                                            borderRadius: "10px",
-                                        },
-                                    }}
                                 />
                             )}
                         />
 
-                        {/* Confirm Password Field */}
                         <Controller
                             name="passwordConfirmation"
                             control={control}
@@ -339,52 +330,49 @@ export default function RegisterPage() {
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
-                                                <LockIcon className="text-gray-500" />
+                                                <Lock className="text-gray-500" />
                                             </InputAdornment>
                                         ),
                                         endAdornment: (
                                             <InputAdornment position="end">
                                                 <IconButton
+                                                    aria-label="toggle password visibility"
                                                     onClick={() =>
                                                         setShowConfirmPassword(
                                                             !showConfirmPassword
                                                         )
                                                     }
                                                     edge="end"
-                                                    className="text-gray-600"
                                                 >
                                                     {showConfirmPassword ? (
-                                                        <VisibilityOffIcon />
+                                                        <VisibilityOff />
                                                     ) : (
-                                                        <VisibilityIcon />
+                                                        <Visibility />
                                                     )}
                                                 </IconButton>
                                             </InputAdornment>
                                         ),
-                                    }}
-                                    sx={{
-                                        "& .MuiOutlinedInput-root": {
-                                            borderRadius: "10px",
-                                        },
                                     }}
                                 />
                             )}
                         />
                     </>
                 );
+
             case 2:
                 return (
                     <>
                         <div className="bg-gray-50 p-6 rounded-xl mb-6">
                             <div className="flex items-center gap-3 mb-4">
-                                <SchoolIcon className="text-primary-500" />
+                                <School className="text-primary-500" />
                                 <Typography
                                     variant="h6"
-                                    className="text-gray-800"
+                                    className="text-gray-800 font-medium"
                                 >
-                                    Almost there!
+                                    Join UniBot
                                 </Typography>
                             </div>
+
                             <Typography
                                 variant="body2"
                                 className="text-gray-600 mb-4"
@@ -392,23 +380,35 @@ export default function RegisterPage() {
                                 By creating an account, you&apos;ll have access
                                 to:
                             </Typography>
+
                             <ul className="list-disc ml-5 space-y-2">
-                                <li className="text-gray-700">
-                                    Personalized academic assistance
+                                <li>
+                                    <Typography
+                                        variant="body2"
+                                        className="text-gray-700"
+                                    >
+                                        Personalized academic support
+                                    </Typography>
                                 </li>
-                                <li className="text-gray-700">
-                                    Course planning and scheduling tools
+                                <li>
+                                    <Typography
+                                        variant="body2"
+                                        className="text-gray-700"
+                                    >
+                                        Efficient study organization tools
+                                    </Typography>
                                 </li>
-                                <li className="text-gray-700">
-                                    Study resources and recommendations
-                                </li>
-                                <li className="text-gray-700">
-                                    AI-powered learning support
+                                <li>
+                                    <Typography
+                                        variant="body2"
+                                        className="text-gray-700"
+                                    >
+                                        AI-powered learning assistance
+                                    </Typography>
                                 </li>
                             </ul>
                         </div>
 
-                        {/* Terms and Conditions Checkbox */}
                         <Controller
                             name="agreeToTerms"
                             control={control}
@@ -419,13 +419,7 @@ export default function RegisterPage() {
                             render={({ field }) => (
                                 <div>
                                     <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                {...field}
-                                                checked={field.value}
-                                                className="text-primary-600"
-                                            />
-                                        }
+                                        control={<Checkbox {...field} />}
                                         label={
                                             <Typography
                                                 variant="body2"
@@ -458,6 +452,7 @@ export default function RegisterPage() {
                         />
                     </>
                 );
+
             default:
                 return null;
         }
@@ -465,53 +460,28 @@ export default function RegisterPage() {
 
     return (
         <div className="min-h-screen flex flex-col-reverse lg:flex-row overflow-hidden">
-            {/* Left Branding Column */}
+            {/* Left side - Features showcase */}
             <div className="hidden lg:flex lg:w-1/2 relative bg-primary-900">
                 <div className="absolute inset-0 z-10 flex flex-col justify-between p-12">
-                    <div>
-                        <Typography
-                            variant="h4"
-                            className="text-white font-bold"
-                        >
-                            UniBot
-                        </Typography>
-                    </div>
                     <div className="max-w-md">
                         <Typography
-                            variant="h3"
-                            className="text-white font-bold mb-6"
+                            variant="h4"
+                            className="text-white font-bold mb-3"
                         >
-                            Start your journey with UniBot today
+                            Welcome to UniBot
                         </Typography>
+
                         <Typography variant="body1" className="text-white/80">
                             Join thousands of students who are using UniBot to
                             enhance their university experience. Get
                             personalized academic support and organize your
                             studies efficiently.
                         </Typography>
+
                         <div className="flex flex-col gap-4 mt-10">
                             <div className="flex items-center gap-4">
                                 <div className="bg-white/20 p-3 rounded-full">
-                                    <SchoolIcon className="text-white" />
-                                </div>
-                                <div>
-                                    <Typography
-                                        variant="body1"
-                                        className="text-white font-medium"
-                                    >
-                                        Academic Excellence
-                                    </Typography>
-                                    <Typography
-                                        variant="body2"
-                                        className="text-white/70"
-                                    >
-                                        AI-powered assistance for your courses
-                                    </Typography>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="bg-white/20 p-3 rounded-full">
-                                    <SchoolIcon className="text-white" />
+                                    <School className="text-white" />
                                 </div>
                                 <div>
                                     <Typography
@@ -528,26 +498,33 @@ export default function RegisterPage() {
                                     </Typography>
                                 </div>
                             </div>
+
+                            <div className="flex items-center gap-4">
+                                <div className="bg-white/20 p-3 rounded-full">
+                                    <School className="text-white" />
+                                </div>
+                                <div>
+                                    <Typography
+                                        variant="body1"
+                                        className="text-white font-medium"
+                                    >
+                                        AI-Powered Support
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        className="text-white/70"
+                                    >
+                                        24/7 assistance for your academic
+                                        questions
+                                    </Typography>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-8 rounded-full bg-white opacity-100"></div>
-                        <div className="h-1.5 w-3 rounded-full bg-white/30"></div>
-                        <div className="h-1.5 w-3 rounded-full bg-white/30"></div>
-                    </div>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-b from-primary-700/80 to-primary-900/95 z-0"></div>
-                <Image
-                    src="/university-students.jpg"
-                    alt="University students"
-                    fill
-                    style={{ objectFit: "cover" }}
-                    className="mix-blend-overlay opacity-50"
-                    priority
-                />
             </div>
 
-            {/* Right Form Column */}
+            {/* Right side - Registration form */}
             <div className="flex-1 flex items-center justify-center p-6 lg:p-0">
                 <div className="w-full max-w-md p-8 lg:p-12">
                     <div className="mb-8 text-center lg:text-left">
@@ -557,8 +534,8 @@ export default function RegisterPage() {
                         >
                             Create an Account
                         </Typography>
-                        <Typography variant="body1" className="text-gray-600">
-                            Join UniBot and transform your university experience
+                        <Typography variant="body2" className="text-gray-600">
+                            Start your academic journey with UniBot
                         </Typography>
                     </div>
 
@@ -580,21 +557,10 @@ export default function RegisterPage() {
                     ) : (
                         <form
                             onSubmit={handleSubmit(onSubmit)}
-                            className="flex flex-col gap-y-5"
+                            className="flex flex-col gap-y-6"
                         >
                             {registerError && (
-                                <Alert
-                                    severity="error"
-                                    className="mb-4"
-                                    sx={{
-                                        borderRadius: "8px",
-                                        backgroundColor:
-                                            "rgba(211, 47, 47, 0.1)",
-                                        ".MuiAlert-icon": {
-                                            color: "error.main",
-                                        },
-                                    }}
-                                >
+                                <Alert severity="error" className="mb-4">
                                     {registerError}
                                 </Alert>
                             )}
@@ -611,9 +577,7 @@ export default function RegisterPage() {
                                 ))}
                             </Stepper>
 
-                            <div className="space-y-5 mb-8">
-                                {renderStepContent(activeStep)}
-                            </div>
+                            {renderStepContent(activeStep)}
 
                             <div className="flex justify-between mt-4">
                                 <Button
@@ -622,7 +586,7 @@ export default function RegisterPage() {
                                     variant="outlined"
                                     color="primary"
                                     className="px-6 rounded-xl"
-                                    startIcon={<ArrowBackIcon />}
+                                    startIcon={<ArrowBack />}
                                 >
                                     Back
                                 </Button>
@@ -636,13 +600,13 @@ export default function RegisterPage() {
                                         disabled={registerApiLoading}
                                         endIcon={
                                             !registerApiLoading && (
-                                                <ArrowForwardIcon />
+                                                <ArrowForward />
                                             )
                                         }
                                     >
                                         {registerApiLoading
-                                            ? "Creating Account..."
-                                            : "Complete"}
+                                            ? "Registering..."
+                                            : "Register"}
                                     </Button>
                                 ) : (
                                     <Button
@@ -650,7 +614,7 @@ export default function RegisterPage() {
                                         color="primary"
                                         onClick={handleNext}
                                         className="px-6 rounded-xl"
-                                        endIcon={<ArrowForwardIcon />}
+                                        endIcon={<ArrowForward />}
                                     >
                                         Next
                                     </Button>
@@ -659,29 +623,20 @@ export default function RegisterPage() {
 
                             {activeStep === steps.length - 1 && (
                                 <>
-                                    <Divider className="my-6">
-                                        <Typography
-                                            variant="body2"
-                                            className="text-gray-500 px-2"
+                                    <Divider className="my-4" />
+                                    <Typography
+                                        variant="body2"
+                                        className="text-gray-600"
+                                        align="center"
+                                    >
+                                        Already have an account?{" "}
+                                        <Link
+                                            href="/login"
+                                            className="text-primary-600 hover:text-primary-800 font-medium"
                                         >
-                                            OR
-                                        </Typography>
-                                    </Divider>
-
-                                    <div className="text-center">
-                                        <Typography
-                                            variant="body2"
-                                            className="text-gray-600"
-                                        >
-                                            Already have an account?{" "}
-                                            <Link
-                                                href="/login"
-                                                className="text-primary-600 hover:text-primary-800 font-medium"
-                                            >
-                                                Sign in
-                                            </Link>
-                                        </Typography>
-                                    </div>
+                                            Log in
+                                        </Link>
+                                    </Typography>
                                 </>
                             )}
                         </form>
