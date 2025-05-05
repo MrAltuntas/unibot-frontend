@@ -13,47 +13,23 @@ import {
     InputAdornment,
     Alert,
     Divider,
+    Stepper,
+    Step,
+    StepLabel,
+    Box,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
+import SchoolIcon from "@mui/icons-material/School";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import useMutateApi from "@/Hooks/useMutateApi";
-
-// Create a common sx style object to apply to all text fields
-const textFieldSx = {
-    "& .MuiInputBase-input": {
-        paddingLeft: "15px",
-    },
-    "& .MuiInputLabel-root:not(.MuiInputLabel-shrink)": {
-        transform: "translate(40px, 16px) scale(1)",
-    },
-    "& .MuiInputLabel-shrink": {
-        marginLeft: 0,
-    },
-    // Fix autofill styling
-    "& input:-webkit-autofill, & input:-webkit-autofill:hover, & input:-webkit-autofill:focus, & input:-webkit-autofill:active":
-        {
-            WebkitBoxShadow: "0 0 0 1000px white inset",
-            WebkitTextFillColor: "inherit",
-            transition: "background-color 5000s ease-in-out 0s",
-        },
-    // Consistent hover styles
-    "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
-        borderColor: "primary.main",
-    },
-    // Consistent focus styles
-    "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-        borderColor: "primary.main",
-    },
-    // Ensure text remains visible during transition
-    "& .MuiInputBase-input, & .MuiInputLabel-root": {
-        transition: "color 0.2s ease-in-out",
-    },
-};
 
 type TRegisterForm = {
     firstName: string;
@@ -79,11 +55,14 @@ export default function RegisterPage() {
         control,
         handleSubmit,
         watch,
-        formState: { errors },
+        trigger,
+        formState: { errors, isValid },
     } = useForm({
         defaultValues: initialValues,
+        mode: "onChange",
     });
 
+    const [activeStep, setActiveStep] = useState(0);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
@@ -95,6 +74,28 @@ export default function RegisterPage() {
     });
 
     const password = watch("password");
+
+    const steps = [
+        { label: "Personal Info", fields: ["firstName", "lastName"] },
+        {
+            label: "Account Setup",
+            fields: ["email", "password", "passwordConfirmation"],
+        },
+        { label: "Confirmation", fields: ["agreeToTerms"] },
+    ];
+
+    const handleNext = async () => {
+        const fieldsToValidate = steps[activeStep].fields;
+        const isStepValid = await trigger(fieldsToValidate as any);
+
+        if (isStepValid) {
+            setActiveStep((prevStep) => prevStep + 1);
+        }
+    };
+
+    const handleBack = () => {
+        setActiveStep((prevStep) => prevStep - 1);
+    };
 
     const onSubmit = async (data: TRegisterForm) => {
         setRegisterError(null);
@@ -128,37 +129,11 @@ export default function RegisterPage() {
         }
     };
 
-    return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-            <Paper className="w-full max-w-md p-8 shadow-lg rounded-lg">
-                <div className="text-center mb-8">
-                    <Typography
-                        variant="h4"
-                        className="text-primary-700 font-bold mb-2"
-                    >
-                        Create Account
-                    </Typography>
-                    <Typography variant="body2" className="text-gray-600">
-                        Join us today and start exploring
-                    </Typography>
-                </div>
-
-                {isRegistered ? (
-                    <Alert severity="success" className="mb-4">
-                        Registration successful! Check your email to verify your
-                        account. Redirecting to login page...
-                    </Alert>
-                ) : (
-                    <form
-                        onSubmit={handleSubmit(onSubmit)}
-                        className="flex flex-col gap-y-6"
-                    >
-                        {registerError && (
-                            <Alert severity="error" className="mb-4">
-                                {registerError}
-                            </Alert>
-                        )}
-
+    const renderStepContent = (step: number) => {
+        switch (step) {
+            case 0:
+                return (
+                    <>
                         {/* First Name Field */}
                         <Controller
                             name="firstName"
@@ -187,7 +162,11 @@ export default function RegisterPage() {
                                             </InputAdornment>
                                         ),
                                     }}
-                                    sx={textFieldSx}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            borderRadius: "10px",
+                                        },
+                                    }}
                                 />
                             )}
                         />
@@ -220,11 +199,19 @@ export default function RegisterPage() {
                                             </InputAdornment>
                                         ),
                                     }}
-                                    sx={textFieldSx}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            borderRadius: "10px",
+                                        },
+                                    }}
                                 />
                             )}
                         />
-
+                    </>
+                );
+            case 1:
+                return (
+                    <>
                         {/* Email Field */}
                         <Controller
                             name="email"
@@ -252,7 +239,11 @@ export default function RegisterPage() {
                                             </InputAdornment>
                                         ),
                                     }}
-                                    sx={textFieldSx}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            borderRadius: "10px",
+                                        },
+                                    }}
                                 />
                             )}
                         />
@@ -310,7 +301,11 @@ export default function RegisterPage() {
                                             </InputAdornment>
                                         ),
                                     }}
-                                    sx={textFieldSx}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            borderRadius: "10px",
+                                        },
+                                    }}
                                 />
                             )}
                         />
@@ -367,10 +362,51 @@ export default function RegisterPage() {
                                             </InputAdornment>
                                         ),
                                     }}
-                                    sx={textFieldSx}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            borderRadius: "10px",
+                                        },
+                                    }}
                                 />
                             )}
                         />
+                    </>
+                );
+            case 2:
+                return (
+                    <>
+                        <div className="bg-gray-50 p-6 rounded-xl mb-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <SchoolIcon className="text-primary-500" />
+                                <Typography
+                                    variant="h6"
+                                    className="text-gray-800"
+                                >
+                                    Almost there!
+                                </Typography>
+                            </div>
+                            <Typography
+                                variant="body2"
+                                className="text-gray-600 mb-4"
+                            >
+                                By creating an account, you&apos;ll have access
+                                to:
+                            </Typography>
+                            <ul className="list-disc ml-5 space-y-2">
+                                <li className="text-gray-700">
+                                    Personalized academic assistance
+                                </li>
+                                <li className="text-gray-700">
+                                    Course planning and scheduling tools
+                                </li>
+                                <li className="text-gray-700">
+                                    Study resources and recommendations
+                                </li>
+                                <li className="text-gray-700">
+                                    AI-powered learning support
+                                </li>
+                            </ul>
+                        </div>
 
                         {/* Terms and Conditions Checkbox */}
                         <Controller
@@ -395,8 +431,20 @@ export default function RegisterPage() {
                                                 variant="body2"
                                                 className="text-gray-700"
                                             >
-                                                I agree to the Terms of Service
-                                                and Privacy Policy
+                                                I agree to the{" "}
+                                                <Link
+                                                    href="/terms"
+                                                    className="text-primary-600 hover:text-primary-800"
+                                                >
+                                                    Terms of Service
+                                                </Link>{" "}
+                                                and{" "}
+                                                <Link
+                                                    href="/privacy"
+                                                    className="text-primary-600 hover:text-primary-800"
+                                                >
+                                                    Privacy Policy
+                                                </Link>
                                             </Typography>
                                         }
                                     />
@@ -408,49 +456,238 @@ export default function RegisterPage() {
                                 </div>
                             )}
                         />
+                    </>
+                );
+            default:
+                return null;
+        }
+    };
 
-                        {/* Submit Button */}
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            size="large"
-                            disabled={registerApiLoading}
-                            className="bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-md shadow-md hover:shadow-lg transition-all duration-200"
+    return (
+        <div className="min-h-screen flex flex-col-reverse lg:flex-row overflow-hidden">
+            {/* Left Branding Column */}
+            <div className="hidden lg:flex lg:w-1/2 relative bg-primary-900">
+                <div className="absolute inset-0 z-10 flex flex-col justify-between p-12">
+                    <div>
+                        <Typography
+                            variant="h4"
+                            className="text-white font-bold"
                         >
-                            {registerApiLoading
-                                ? "Creating Account..."
-                                : "Create Account"}
-                        </Button>
-
-                        <Divider className="my-6">
-                            <Typography
-                                variant="body2"
-                                className="text-gray-500 px-2"
-                            >
-                                OR
-                            </Typography>
-                        </Divider>
-
-                        {/* Login Link */}
-                        <div className="text-center mt-4">
-                            <Typography
-                                variant="body2"
-                                className="text-gray-600"
-                            >
-                                Already have an account?{" "}
-                                <Link
-                                    href="/login"
-                                    className="text-primary-600 hover:text-primary-800 font-medium"
-                                >
-                                    Sign in
-                                </Link>
-                            </Typography>
+                            UniBot
+                        </Typography>
+                    </div>
+                    <div className="max-w-md">
+                        <Typography
+                            variant="h3"
+                            className="text-white font-bold mb-6"
+                        >
+                            Start your journey with UniBot today
+                        </Typography>
+                        <Typography variant="body1" className="text-white/80">
+                            Join thousands of students who are using UniBot to
+                            enhance their university experience. Get
+                            personalized academic support and organize your
+                            studies efficiently.
+                        </Typography>
+                        <div className="flex flex-col gap-4 mt-10">
+                            <div className="flex items-center gap-4">
+                                <div className="bg-white/20 p-3 rounded-full">
+                                    <SchoolIcon className="text-white" />
+                                </div>
+                                <div>
+                                    <Typography
+                                        variant="body1"
+                                        className="text-white font-medium"
+                                    >
+                                        Academic Excellence
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        className="text-white/70"
+                                    >
+                                        AI-powered assistance for your courses
+                                    </Typography>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="bg-white/20 p-3 rounded-full">
+                                    <SchoolIcon className="text-white" />
+                                </div>
+                                <div>
+                                    <Typography
+                                        variant="body1"
+                                        className="text-white font-medium"
+                                    >
+                                        Personalized Learning
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        className="text-white/70"
+                                    >
+                                        Custom study plans and resources
+                                    </Typography>
+                                </div>
+                            </div>
                         </div>
-                    </form>
-                )}
-            </Paper>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="h-1.5 w-8 rounded-full bg-white opacity-100"></div>
+                        <div className="h-1.5 w-3 rounded-full bg-white/30"></div>
+                        <div className="h-1.5 w-3 rounded-full bg-white/30"></div>
+                    </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-b from-primary-700/80 to-primary-900/95 z-0"></div>
+                <Image
+                    src="/university-students.jpg"
+                    alt="University students"
+                    fill
+                    style={{ objectFit: "cover" }}
+                    className="mix-blend-overlay opacity-50"
+                    priority
+                />
+            </div>
+
+            {/* Right Form Column */}
+            <div className="flex-1 flex items-center justify-center p-6 lg:p-0">
+                <div className="w-full max-w-md p-8 lg:p-12">
+                    <div className="mb-8 text-center lg:text-left">
+                        <Typography
+                            variant="h4"
+                            className="text-gray-800 font-bold mb-2"
+                        >
+                            Create an Account
+                        </Typography>
+                        <Typography variant="body1" className="text-gray-600">
+                            Join UniBot and transform your university experience
+                        </Typography>
+                    </div>
+
+                    {isRegistered ? (
+                        <Alert
+                            severity="success"
+                            className="mb-4"
+                            sx={{
+                                borderRadius: "8px",
+                                backgroundColor: "rgba(46, 125, 50, 0.1)",
+                                ".MuiAlert-icon": {
+                                    color: "success.main",
+                                },
+                            }}
+                        >
+                            Registration successful! Check your email to verify
+                            your account. Redirecting to login page...
+                        </Alert>
+                    ) : (
+                        <form
+                            onSubmit={handleSubmit(onSubmit)}
+                            className="flex flex-col gap-y-5"
+                        >
+                            {registerError && (
+                                <Alert
+                                    severity="error"
+                                    className="mb-4"
+                                    sx={{
+                                        borderRadius: "8px",
+                                        backgroundColor:
+                                            "rgba(211, 47, 47, 0.1)",
+                                        ".MuiAlert-icon": {
+                                            color: "error.main",
+                                        },
+                                    }}
+                                >
+                                    {registerError}
+                                </Alert>
+                            )}
+
+                            <Stepper
+                                activeStep={activeStep}
+                                alternativeLabel
+                                className="mb-8"
+                            >
+                                {steps.map((step, index) => (
+                                    <Step key={step.label}>
+                                        <StepLabel>{step.label}</StepLabel>
+                                    </Step>
+                                ))}
+                            </Stepper>
+
+                            <div className="space-y-5 mb-8">
+                                {renderStepContent(activeStep)}
+                            </div>
+
+                            <div className="flex justify-between mt-4">
+                                <Button
+                                    disabled={activeStep === 0}
+                                    onClick={handleBack}
+                                    variant="outlined"
+                                    color="primary"
+                                    className="px-6 rounded-xl"
+                                    startIcon={<ArrowBackIcon />}
+                                >
+                                    Back
+                                </Button>
+
+                                {activeStep === steps.length - 1 ? (
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        color="primary"
+                                        className="px-6 rounded-xl"
+                                        disabled={registerApiLoading}
+                                        endIcon={
+                                            !registerApiLoading && (
+                                                <ArrowForwardIcon />
+                                            )
+                                        }
+                                    >
+                                        {registerApiLoading
+                                            ? "Creating Account..."
+                                            : "Complete"}
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={handleNext}
+                                        className="px-6 rounded-xl"
+                                        endIcon={<ArrowForwardIcon />}
+                                    >
+                                        Next
+                                    </Button>
+                                )}
+                            </div>
+
+                            {activeStep === steps.length - 1 && (
+                                <>
+                                    <Divider className="my-6">
+                                        <Typography
+                                            variant="body2"
+                                            className="text-gray-500 px-2"
+                                        >
+                                            OR
+                                        </Typography>
+                                    </Divider>
+
+                                    <div className="text-center">
+                                        <Typography
+                                            variant="body2"
+                                            className="text-gray-600"
+                                        >
+                                            Already have an account?{" "}
+                                            <Link
+                                                href="/login"
+                                                className="text-primary-600 hover:text-primary-800 font-medium"
+                                            >
+                                                Sign in
+                                            </Link>
+                                        </Typography>
+                                    </div>
+                                </>
+                            )}
+                        </form>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
