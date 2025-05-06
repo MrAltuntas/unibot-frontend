@@ -37,7 +37,9 @@ const initialValues: TLoginForm = {
 };
 
 export default function LoginPage() {
-    console.log("[DEBUG] LoginPage component initialized");
+    if (process.env.NODE_ENV === "development") {
+        console.log("[DEBUG] LoginPage component initialized");
+    }
     const router = useRouter();
     const searchParams = useSearchParams();
     const registered = searchParams.get("registered");
