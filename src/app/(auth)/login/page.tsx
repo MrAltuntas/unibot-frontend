@@ -105,14 +105,16 @@ export default function LoginPage() {
                 router.push("/dashboard");
             }, 2000);
         } catch (error: any) {
-            console.error("[DEBUG] Login error details:", {
-                status: error.status || error.statusCode,
-                message: error.message,
-                stack: error.stack,
-                response: error.response
-                    ? JSON.stringify(error.response, null, 2)
-                    : "No response data",
-            });
+            if (process.env.NODE_ENV === "development") {
+                console.error("[DEBUG] Login error details:", {
+                    status: error.status || error.statusCode,
+                    message: error.message,
+                    stack: error.stack,
+                    response: error.response
+                        ? JSON.stringify(error.response, null, 2)
+                        : "No response data",
+                });
+            }
 
             // Check for specific message patterns or status codes
             const errorMsg = error.message?.toLowerCase() || "";
