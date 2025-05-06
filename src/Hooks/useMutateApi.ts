@@ -43,6 +43,11 @@ const useMutateApi = ({
 
             const contentType = response.headers.get("content-type");
             if (!contentType || !contentType.includes("application/json")) {
+                console.error("Unexpected response format:", {
+                    status: response.status,
+                    headers: Array.from(response.headers.entries()),
+                    body: await response.text(),
+                });
                 throw new Error("Unexpected response format from server");
             }
 
