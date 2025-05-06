@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
     TextField,
@@ -37,10 +37,23 @@ const initialValues: TLoginForm = {
 };
 
 export default function LoginPage() {
+    console.log("[DEBUG] LoginPage component initialized");
     const router = useRouter();
     const searchParams = useSearchParams();
     const registered = searchParams.get("registered");
     const { login } = useAuth();
+
+    // Fix for hydration issues
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        console.log("[DEBUG] Setting isMounted to true");
+        setIsMounted(true);
+        console.log(
+            "[DEBUG] Registration param:",
+            registered ? "true" : "false"
+        );
+    }, [registered]);
 
     const {
         control,
@@ -50,6 +63,13 @@ export default function LoginPage() {
         defaultValues: initialValues,
     });
 
+    // Log form errors when they change
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            console.log("[DEBUG] Form validation errors:", errors);
+        }
+    }, [errors]);
+
     const [showPassword, setShowPassword] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
     const [isUnverifiedEmail, setIsUnverifiedEmail] = useState(false);
@@ -57,23 +77,45 @@ export default function LoginPage() {
     const [loginSuccess, setLoginSuccess] = useState<boolean>(false);
 
     const onSubmit = async (data: TLoginForm) => {
+        console.log("[DEBUG] Form submitted with data:", {
+            email: data.email,
+            password: "********", // Don't log actual password
+            rememberMe: data.rememberMe,
+        });
+
         setLoginError(null);
         setIsUnverifiedEmail(false);
         setLoginSuccess(false);
         setIsLoading(true);
 
+        console.log("[DEBUG] Starting login process");
+
         try {
+            console.log("[DEBUG] Calling login function from AuthContext");
             await login(data.email, data.password, data.rememberMe);
+
+            console.log("[DEBUG] Login successful");
             setLoginSuccess(true);
 
+            console.log("[DEBUG] Setting redirect timeout");
             setTimeout(() => {
+                console.log("[DEBUG] Redirecting to dashboard");
                 router.push("/dashboard");
             }, 2000);
         } catch (error: any) {
-            console.log("Login error:", error);
+            console.error("[DEBUG] Login error details:", {
+                status: error.status || error.statusCode,
+                message: error.message,
+                stack: error.stack,
+                response: error.response
+                    ? JSON.stringify(error.response, null, 2)
+                    : "No response data",
+            });
 
             // Check for specific message patterns or status codes
             const errorMsg = error.message?.toLowerCase() || "";
+            console.log("[DEBUG] Error message lowercase:", errorMsg);
+
             if (
                 error.status === 403 ||
                 error.statusCode === 403 ||
@@ -81,14 +123,22 @@ export default function LoginPage() {
                 errorMsg.includes("verification") ||
                 errorMsg.includes("unverified")
             ) {
+                console.log("[DEBUG] Setting unverified email state");
                 setIsUnverifiedEmail(true);
             } else {
+                console.log("[DEBUG] Setting general login error");
                 setLoginError(error.message || "Invalid email or password");
             }
         } finally {
+            console.log("[DEBUG] Login process completed");
             setIsLoading(false);
         }
     };
+
+    // If not mounted, avoid hydration issues by returning null
+    if (!isMounted) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden">
@@ -252,9 +302,9 @@ export default function LoginPage() {
                     <form
                         onSubmit={handleSubmit(onSubmit)}
                         className="flex flex-col gap-y-5"
+                        noValidate
                     >
                         {/* Email Field */}
-                        login\page.tsx
                         <Controller
                             name="email"
                             control={control}
@@ -268,14 +318,21 @@ export default function LoginPage() {
                             render={({ field }) => (
                                 <TextField
                                     {...field}
-                                    id="email-input" // Add unique ID
+                                    id="email-input"
                                     label="Email Address"
                                     variant="outlined"
                                     fullWidth
-                                    autoComplete="email" // Add autocomplete attribute
+                                    autoComplete="email"
                                     error={!!errors.email}
                                     helperText={errors.email?.message}
                                     className="bg-white"
+                                    onChange={(e) => {
+                                        console.log(
+                                            "[DEBUG] Email changed:",
+                                            e.target.value
+                                        );
+                                        field.onChange(e);
+                                    }}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -287,15 +344,11 @@ export default function LoginPage() {
                                         "& .MuiOutlinedInput-root": {
                                             borderRadius: "10px",
                                         },
-                                        "& .MuiInputBase-input": {
-                                            zIndex: 1, // Ensure input is on top
-                                            position: "relative",
-                                        },
-                                        mb: 2, // Add margin bottom
                                     }}
                                 />
                             )}
                         />
+
                         {/* Password Field */}
                         <Controller
                             name="password"
@@ -306,6 +359,7 @@ export default function LoginPage() {
                             render={({ field }) => (
                                 <TextField
                                     {...field}
+                                    id="password-input"
                                     label="Password"
                                     variant="outlined"
                                     fullWidth
@@ -313,6 +367,12 @@ export default function LoginPage() {
                                     error={!!errors.password}
                                     helperText={errors.password?.message}
                                     className="bg-white"
+                                    onChange={(e) => {
+                                        console.log(
+                                            "[DEBUG] Password changed (masked)"
+                                        );
+                                        field.onChange(e);
+                                    }}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -322,13 +382,18 @@ export default function LoginPage() {
                                         endAdornment: (
                                             <InputAdornment position="end">
                                                 <IconButton
-                                                    onClick={() =>
+                                                    onClick={() => {
+                                                        console.log(
+                                                            "[DEBUG] Toggle password visibility:",
+                                                            !showPassword
+                                                        );
                                                         setShowPassword(
                                                             !showPassword
-                                                        )
-                                                    }
+                                                        );
+                                                    }}
                                                     edge="end"
                                                     className="text-gray-600"
+                                                    type="button"
                                                 >
                                                     {showPassword ? (
                                                         <VisibilityOffIcon />
@@ -347,6 +412,7 @@ export default function LoginPage() {
                                 />
                             )}
                         />
+
                         <div className="flex justify-between items-center">
                             {/* Remember Me Checkbox */}
                             <Controller
@@ -357,8 +423,16 @@ export default function LoginPage() {
                                         control={
                                             <Checkbox
                                                 {...field}
+                                                id="remember-me-checkbox"
                                                 checked={field.value}
                                                 className="text-primary-600"
+                                                onChange={(e) => {
+                                                    console.log(
+                                                        "[DEBUG] Remember me changed:",
+                                                        e.target.checked
+                                                    );
+                                                    field.onChange(e);
+                                                }}
                                             />
                                         }
                                         label={
@@ -377,10 +451,16 @@ export default function LoginPage() {
                             <Link
                                 href="/forgot-password"
                                 className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+                                onClick={() =>
+                                    console.log(
+                                        "[DEBUG] Forgot password link clicked"
+                                    )
+                                }
                             >
                                 Forgot password?
                             </Link>
                         </div>
+
                         {/* Submit Button */}
                         <Button
                             type="submit"
@@ -391,9 +471,15 @@ export default function LoginPage() {
                             disabled={isLoading}
                             className="mt-4 py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
                             endIcon={!isLoading && <ArrowForwardIcon />}
+                            onClick={() =>
+                                console.log(
+                                    "[DEBUG] Submit button clicked - form will be validated"
+                                )
+                            }
                         >
                             {isLoading ? "Signing in..." : "Sign In"}
                         </Button>
+
                         <Divider className="my-6">
                             <Typography
                                 variant="body2"
@@ -402,6 +488,7 @@ export default function LoginPage() {
                                 OR
                             </Typography>
                         </Divider>
+
                         {/* Register Link */}
                         <div className="text-center">
                             <Typography
@@ -412,6 +499,11 @@ export default function LoginPage() {
                                 <Link
                                     href="/register"
                                     className="text-primary-600 hover:text-primary-800 font-medium"
+                                    onClick={() =>
+                                        console.log(
+                                            "[DEBUG] Register link clicked"
+                                        )
+                                    }
                                 >
                                     Create an account
                                 </Link>

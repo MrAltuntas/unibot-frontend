@@ -1,134 +1,79 @@
-import { useState } from 'react';
-import axios, {AxiosResponse} from 'axios';
+"use client";
+import { useState, useEffect } from "react";
 
-interface IPostApiState {
-    loading: boolean;
-    error: string | null;
-    data: object | null;
-}
-interface IMutateProps {
-    apiPath?: string;
-    method?: 'PUT' | 'DELETE' | 'POST' | 'GET';
-    baseURL?: string;
-    withCredentials?: boolean;
-    contentType?: string;
-}
-type TMutateReturn = [
-    (object: any, params?: any) => any,
-    boolean,
-        object | null
-];
+type ApiOptions = {
+    apiPath: string;
+    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+    baseUrl?: string;
+};
+
+/**
+ * Custom hook for making API requests
+ */
 const useMutateApi = ({
-                          apiPath,
-                          method,
-                          baseURL,
-                          withCredentials = true,
-                          contentType = 'application/json;charset=UTF-8',
-                      }: IMutateProps): TMutateReturn => {
-    const [responseData, setResponseData] = useState<IPostApiState>({
-        loading: false,
-        error: null,
-        data: null,
-    });
+    apiPath,
+    method,
+    baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
+}: ApiOptions) => {
+    const [loading, setLoading] = useState(false);
+    const [isClient, setIsClient] = useState(false);
 
-    const fetchApi = async (variables: object, params?: object) => {
-        setResponseData({ ...responseData, loading: true });
-        const axiosConfig = {
-            baseURL: baseURL ? baseURL : process.env.NEXT_PUBLIC_REACT_APP_API_URL,
-            url: apiPath,
-            method: method ? method : 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': contentType,
-                'Accept-Language': 'tr',
-                credentials: 'include',
-            },
-            withCredentials: withCredentials,
-            params: params,
-            data: variables,
-        };
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
-        const response = await axios(axiosConfig)
-            .then((res: AxiosResponse) => res)
-            .catch((err) => {
-                return { ...err, ...err.response };
-            });
+    const fetchApi = async (data?: any) => {
+        setLoading(true);
 
-        if (response.message !== undefined) {
-            switch (response.status) {
-                case 400:
-                    const errorMessage =
-                        response.data?.error?.message ||
-                        response.data?.error ||
-                        "An unexpected error occurred";
+        try {
+            const token = isClient ? localStorage.getItem("accessToken") : null;
 
-                    setResponseData({
-                        loading: false,
-                        error: response.data.Errors.map(
-                            (err: { Message: string }) => err.Message
-                        ).join('. '),
-                        data: null,
-                    });
+            const options: RequestInit = {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                ...(data && method !== "GET"
+                    ? { body: JSON.stringify(data) }
+                    : {}),
+            };
 
-                    return {
-                        data: null,
-                        error: response.data.Errors.map(
-                            (err: { Message: string }) => err.Message
-                        ).join('. '),
-                        loading: false,
-                    };
-                case 404:
-                    setResponseData({
-                        loading: false,
-                        error: 'Sunucu hatası',
-                        data: null,
-                    });
+            const response = await fetch(`${baseUrl}${apiPath}`, options);
 
-                    return {
-                        data: null,
-                        error: 'Sunucu hatası',
-                        loading: false,
-                    };
-
-                case 500:
-                    setResponseData({
-                        loading: false,
-                        error: 'UnexpectedErrorOccurred',
-                        data: null,
-                    });
-
-                    return {
-                        data: null,
-                        error: 'UnexpectedErrorOccurred',
-                        loading: false,
-                    };
-                case null:
-                    setResponseData({
-                        loading: false,
-                        error: 'UnexpectedErrorOccurred',
-                        data: null,
-                    });
-
-                    return {
-                        data: null,
-                        error: 'UnexpectedErrorOccurred',
-                        loading: false,
-                    };
-                default:
-                    setResponseData({
-                        loading: false,
-                        error: 'beklenmeyen hata',
-                        data: null,
-                    });
-
-                    return { data: null, error: 'beklenmeyen hata', loading: false };
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error("Unexpected response format from server");
             }
-        }
-        setResponseData({ loading: false, error: null, data: response.data });
 
-        return { loading: false, error: null, data: response.data };
+            const jsonResponse = await response.json();
+
+            return {
+                data: jsonResponse.data || null,
+                error:
+                    jsonResponse.error ||
+                    (response.ok
+                        ? null
+                        : { message: "Unknown error occurred" }),
+                status: response.status,
+                ok: response.ok,
+            };
+        } catch (error: any) {
+            return {
+                data: null,
+                error: {
+                    message: error.message || "Failed to connect to the server",
+                    status: error.status || 500,
+                },
+                status: error.status || 500,
+                ok: false,
+            };
+        } finally {
+            setLoading(false);
+        }
     };
 
-    return [fetchApi, responseData.loading, responseData.data];
+    return [fetchApi, loading] as const;
 };
+
 export default useMutateApi;
