@@ -13,8 +13,9 @@ type ApiOptions = {
 const useMutateApi = ({
     apiPath,
     method,
-    baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api",
+    baseUrl,
 }: ApiOptions) => {
+    const resolvedBaseUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
     const [loading, setLoading] = useState(false);
     const [isClient, setIsClient] = useState(false);
 
