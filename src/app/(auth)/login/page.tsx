@@ -5,14 +5,12 @@ import {
     TextField,
     Button,
     Typography,
-    Paper,
     FormControlLabel,
     Checkbox,
     InputAdornment,
     IconButton,
     Alert,
     Divider,
-    Box,
 } from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -21,7 +19,7 @@ import LockIcon from "@mui/icons-material/Lock";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 type TLoginForm = {
@@ -38,11 +36,16 @@ const initialValues: TLoginForm = {
 
 export default function LoginPage() {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const { login } = useAuth();
 
     const [isMounted, setIsMounted] = useState(false);
-    const [registered, setRegistered] = useState(false);
+    const [registered] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            return params.has('registered');
+        }
+        return false;
+    });
     const [showPassword, setShowPassword] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
     const [isUnverifiedEmail, setIsUnverifiedEmail] = useState(false);
@@ -59,14 +62,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         setIsMounted(true);
-
-        if (searchParams) {
-            const registeredParam = searchParams.get("registered");
-            if (registeredParam) {
-                setRegistered(true);
-            }
-        }
-    }, [searchParams]);
+    }, []);
 
     const onSubmit = async (data: TLoginForm) => {
         setLoginError(null);
