@@ -37,24 +37,20 @@ const initialValues: TLoginForm = {
 };
 
 export default function LoginPage() {
-    console.log("[DEBUG] LoginPage component initialized");
     const router = useRouter();
     const searchParams = useSearchParams();
-    const registered = searchParams.get("registered");
     const { login } = useAuth();
 
-    // Fix for hydration issues
+    // State declarations
     const [isMounted, setIsMounted] = useState(false);
+    const [registered, setRegistered] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [loginError, setLoginError] = useState<string | null>(null);
+    const [isUnverifiedEmail, setIsUnverifiedEmail] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [loginSuccess, setLoginSuccess] = useState<boolean>(false);
 
-    useEffect(() => {
-        console.log("[DEBUG] Setting isMounted to true");
-        setIsMounted(true);
-        console.log(
-            "[DEBUG] Registration param:",
-            registered ? "true" : "false"
-        );
-    }, [registered]);
-
+    // Form setup
     const {
         control,
         handleSubmit,
@@ -63,18 +59,20 @@ export default function LoginPage() {
         defaultValues: initialValues,
     });
 
-    // Log form errors when they change
+    // Handle initialization after component mounts on client
     useEffect(() => {
-        if (Object.keys(errors).length > 0) {
-            console.log("[DEBUG] Form validation errors:", errors);
-        }
-    }, [errors]);
+        setIsMounted(true);
 
-    const [showPassword, setShowPassword] = useState(false);
-    const [loginError, setLoginError] = useState<string | null>(null);
-    const [isUnverifiedEmail, setIsUnverifiedEmail] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [loginSuccess, setLoginSuccess] = useState<boolean>(false);
+        // Get URL parameters after mounting on client
+        if (searchParams) {
+            const registeredParam = searchParams.get("registered");
+            if (registeredParam) {
+                setRegistered(true);
+            }
+        }
+
+        console.log("[DEBUG] LoginPage component initialized on client");
+    }, [searchParams]);
 
     const onSubmit = async (data: TLoginForm) => {
         console.log("[DEBUG] Form submitted with data:", {
@@ -112,6 +110,10 @@ export default function LoginPage() {
                     : "No response data",
             });
 
+            // Ensure error has a message property
+            const errorMessage = error?.message || "An unknown error occurred";
+            setLoginError(errorMessage);
+
             // Check for specific message patterns or status codes
             const errorMsg = error.message?.toLowerCase() || "";
             console.log("[DEBUG] Error message lowercase:", errorMsg);
@@ -135,12 +137,8 @@ export default function LoginPage() {
         }
     };
 
-    // If not mounted, avoid hydration issues by returning null
-    if (!isMounted) {
-        return null;
-    }
-
-    return (
+    // Add a simple loading state for the initial render
+    return isMounted ? (
         <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden">
             {/* Left Branding Column */}
             <div className="hidden lg:flex lg:w-1/2 relative bg-primary-900">
@@ -215,7 +213,7 @@ export default function LoginPage() {
                         </Typography>
                     </div>
 
-                    {registered && (
+                    {isMounted && registered && (
                         <Alert
                             severity="success"
                             className="mb-6"
@@ -232,7 +230,7 @@ export default function LoginPage() {
                         </Alert>
                     )}
 
-                    {isUnverifiedEmail && (
+                    {isMounted && isUnverifiedEmail && (
                         <Alert
                             severity="warning"
                             className="mb-6"
@@ -267,7 +265,7 @@ export default function LoginPage() {
                         </Alert>
                     )}
 
-                    {loginError && (
+                    {isMounted && loginError && (
                         <Alert
                             severity="error"
                             className="mb-6"
@@ -283,7 +281,7 @@ export default function LoginPage() {
                         </Alert>
                     )}
 
-                    {loginSuccess && (
+                    {isMounted && loginSuccess && (
                         <Alert
                             severity="success"
                             className="mb-6"
@@ -511,6 +509,12 @@ export default function LoginPage() {
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+    ) : (
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="w-full max-w-md p-8">
+                {/* Simple loading UI that matches server render */}
             </div>
         </div>
     );

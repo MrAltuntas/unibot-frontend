@@ -70,6 +70,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             const response = await loginApi({ email, password });
 
+            if (!response) {
+                throw new Error("No response received from server");
+            }
+
             if (response.error === null && response.data) {
                 const { accessToken, refreshToken, user } = response.data;
 
@@ -81,9 +85,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setUser(user);
             } else {
                 throw new Error(
-                    response.error?.message || "Invalid credentials"
+                    typeof response.error === "string"
+                        ? response.error
+                        : "Invalid credentials"
                 );
             }
+        } catch (error) {
+            console.error("[AUTH] Login error:", error);
+            throw error;
         } finally {
             setIsLoading(false);
         }
