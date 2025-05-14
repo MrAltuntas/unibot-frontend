@@ -21,95 +21,46 @@ type TMutateReturn = [
 const useMutateApi = ({
     apiPath,
     method,
-    baseURL,
-    withCredentials = true,
-    contentType = "application/json;charset=UTF-8",
-}: IMutateProps): TMutateReturn => {
-    const [responseData, setResponseData] = useState<IPostApiState>({
-        loading: false,
-        error: null,
-        data: null,
-    });
+    baseUrl,
+}: ApiOptions) => {
+    const resolvedBaseUrl = baseUrl || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+    const [loading, setLoading] = useState(false);
+    const [isClient, setIsClient] = useState(false);
 
-    const fetchApi = async (variables: object, params?: object) => {
-        setResponseData({ ...responseData, loading: true });
-        const axiosConfig = {
-            baseURL: baseURL
-                ? baseURL
-                : process.env.NEXT_PUBLIC_REACT_APP_API_URL,
-            url: apiPath,
-            method: method ? method : "POST",
-            headers: {
-                Accept: "application/json",
-                "Content-Type": contentType,
-                "Accept-Language": "tr",
-                credentials: "include",
-            },
-            withCredentials: withCredentials,
-            params: params,
-            data: variables,
-        };
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
-        const response = await axios(axiosConfig)
-            .then((res: AxiosResponse) => res)
-            .catch((err) => {
-                return { ...err, ...err.response };
-            });
+    const fetchApi = async (data?: any) => {
+        setLoading(true);
 
-        if (response.message !== undefined) {
-            switch (response.status) {
-                case 400:
-                    const errorMessage =
-                        response.data?.error?.message ||
-                        response.data?.error ||
-                        "An unexpected error occurred";
+        try {
+            const token = isClient ? localStorage.getItem("accessToken") : null;
 
-                    setResponseData({
-                        loading: false,
-                        error: response.data.Errors.map(
-                            (err: { Message: string }) => err.Message
-                        ).join(". "),
-                        data: null,
-                    });
+            const options: RequestInit = {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                ...(data && method !== "GET"
+                    ? { body: JSON.stringify(data) }
+                    : {}),
+            };
 
-                    return {
-                        data: null,
-                        error: response.data.Errors.map(
-                            (err: { Message: string }) => err.Message
-                        ).join(". "),
-                        loading: false,
-                    };
-                case 404:
-                    setResponseData({
-                        loading: false,
-                        error: "Sunucu hatası",
-                        data: null,
-                    });
+            const response = await fetch(`${baseUrl}${apiPath}`, options);
 
-                    return {
-                        data: null,
-                        error: "Sunucu hatası",
-                        loading: false,
-                    };
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                console.error("Unexpected response format:", {
+                    status: response.status,
+                    headers: Array.from(response.headers.entries()),
+                    body: await response.text(),
+                });
+                throw new Error("Unexpected response format from server");
+            }
 
-                case 500:
-                    setResponseData({
-                        loading: false,
-                        error: "UnexpectedErrorOccurred",
-                        data: null,
-                    });
-
-                    return {
-                        data: null,
-                        error: "UnexpectedErrorOccurred",
-                        loading: false,
-                    };
-                case null:
-                    setResponseData({
-                        loading: false,
-                        error: "UnexpectedErrorOccurred",
-                        data: null,
-                    });
+            const jsonResponse = await response.json();
 
                     return {
                         data: null,

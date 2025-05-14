@@ -37,6 +37,9 @@ const initialValues: TLoginForm = {
 };
 
 export default function LoginPage() {
+    if (process.env.NODE_ENV === "development") {
+        console.log("[DEBUG] LoginPage component initialized");
+    }
     const router = useRouter();
     const searchParams = useSearchParams();
     const { login } = useAuth();
@@ -101,18 +104,16 @@ export default function LoginPage() {
                 router.push("/dashboard");
             }, 2000);
         } catch (error: any) {
-            console.error("[DEBUG] Login error details:", {
-                status: error.status || error.statusCode,
-                message: error.message,
-                stack: error.stack,
-                response: error.response
-                    ? JSON.stringify(error.response, null, 2)
-                    : "No response data",
-            });
-
-            // Ensure error has a message property
-            const errorMessage = error?.message || "An unknown error occurred";
-            setLoginError(errorMessage);
+            if (process.env.NODE_ENV === "development") {
+                console.error("[DEBUG] Login error details:", {
+                    status: error.status || error.statusCode,
+                    message: error.message,
+                    stack: error.stack,
+                    response: error.response
+                        ? JSON.stringify(error.response, null, 2)
+                        : "No response data",
+                });
+            }
 
             // Check for specific message patterns or status codes
             const errorMsg = error.message?.toLowerCase() || "";
