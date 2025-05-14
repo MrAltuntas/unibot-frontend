@@ -37,14 +37,10 @@ const initialValues: TLoginForm = {
 };
 
 export default function LoginPage() {
-    if (process.env.NODE_ENV === "development") {
-        console.log("[DEBUG] LoginPage component initialized");
-    }
     const router = useRouter();
     const searchParams = useSearchParams();
     const { login } = useAuth();
 
-    // State declarations
     const [isMounted, setIsMounted] = useState(false);
     const [registered, setRegistered] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -53,7 +49,6 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [loginSuccess, setLoginSuccess] = useState<boolean>(false);
 
-    // Form setup
     const {
         control,
         handleSubmit,
@@ -62,62 +57,32 @@ export default function LoginPage() {
         defaultValues: initialValues,
     });
 
-    // Handle initialization after component mounts on client
     useEffect(() => {
         setIsMounted(true);
 
-        // Get URL parameters after mounting on client
         if (searchParams) {
             const registeredParam = searchParams.get("registered");
             if (registeredParam) {
                 setRegistered(true);
             }
         }
-
-        console.log("[DEBUG] LoginPage component initialized on client");
     }, [searchParams]);
 
     const onSubmit = async (data: TLoginForm) => {
-        console.log("[DEBUG] Form submitted with data:", {
-            email: data.email,
-            password: "********", // Don't log actual password
-            rememberMe: data.rememberMe,
-        });
-
         setLoginError(null);
         setIsUnverifiedEmail(false);
         setLoginSuccess(false);
         setIsLoading(true);
 
-        console.log("[DEBUG] Starting login process");
-
         try {
-            console.log("[DEBUG] Calling login function from AuthContext");
             await login(data.email, data.password, data.rememberMe);
-
-            console.log("[DEBUG] Login successful");
             setLoginSuccess(true);
 
-            console.log("[DEBUG] Setting redirect timeout");
             setTimeout(() => {
-                console.log("[DEBUG] Redirecting to dashboard");
-                router.push("/dashboard");
+                router.push("/");
             }, 2000);
         } catch (error: any) {
-            if (process.env.NODE_ENV === "development") {
-                console.error("[DEBUG] Login error details:", {
-                    status: error.status || error.statusCode,
-                    message: error.message,
-                    stack: error.stack,
-                    response: error.response
-                        ? JSON.stringify(error.response, null, 2)
-                        : "No response data",
-                });
-            }
-
-            // Check for specific message patterns or status codes
             const errorMsg = error.message?.toLowerCase() || "";
-            console.log("[DEBUG] Error message lowercase:", errorMsg);
 
             if (
                 error.status === 403 ||
@@ -126,19 +91,15 @@ export default function LoginPage() {
                 errorMsg.includes("verification") ||
                 errorMsg.includes("unverified")
             ) {
-                console.log("[DEBUG] Setting unverified email state");
                 setIsUnverifiedEmail(true);
             } else {
-                console.log("[DEBUG] Setting general login error");
                 setLoginError(error.message || "Invalid email or password");
             }
         } finally {
-            console.log("[DEBUG] Login process completed");
             setIsLoading(false);
         }
     };
 
-    // Add a simple loading state for the initial render
     return isMounted ? (
         <div className="min-h-screen flex flex-col lg:flex-row overflow-hidden">
             {/* Left Branding Column */}
@@ -193,6 +154,7 @@ export default function LoginPage() {
                     src="/university-campus.jpg"
                     alt="University campus"
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     style={{ objectFit: "cover" }}
                     className="mix-blend-overlay opacity-50"
                     priority
@@ -294,7 +256,7 @@ export default function LoginPage() {
                                 },
                             }}
                         >
-                            Login successful! Redirecting to your dashboard...
+                            Login successful! Redirecting to the home page...
                         </Alert>
                     )}
 
@@ -325,13 +287,6 @@ export default function LoginPage() {
                                     error={!!errors.email}
                                     helperText={errors.email?.message}
                                     className="bg-white"
-                                    onChange={(e) => {
-                                        console.log(
-                                            "[DEBUG] Email changed:",
-                                            e.target.value
-                                        );
-                                        field.onChange(e);
-                                    }}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -366,12 +321,6 @@ export default function LoginPage() {
                                     error={!!errors.password}
                                     helperText={errors.password?.message}
                                     className="bg-white"
-                                    onChange={(e) => {
-                                        console.log(
-                                            "[DEBUG] Password changed (masked)"
-                                        );
-                                        field.onChange(e);
-                                    }}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -381,15 +330,11 @@ export default function LoginPage() {
                                         endAdornment: (
                                             <InputAdornment position="end">
                                                 <IconButton
-                                                    onClick={() => {
-                                                        console.log(
-                                                            "[DEBUG] Toggle password visibility:",
-                                                            !showPassword
-                                                        );
+                                                    onClick={() =>
                                                         setShowPassword(
                                                             !showPassword
-                                                        );
-                                                    }}
+                                                        )
+                                                    }
                                                     edge="end"
                                                     className="text-gray-600"
                                                     type="button"
@@ -425,13 +370,6 @@ export default function LoginPage() {
                                                 id="remember-me-checkbox"
                                                 checked={field.value}
                                                 className="text-primary-600"
-                                                onChange={(e) => {
-                                                    console.log(
-                                                        "[DEBUG] Remember me changed:",
-                                                        e.target.checked
-                                                    );
-                                                    field.onChange(e);
-                                                }}
                                             />
                                         }
                                         label={
@@ -450,11 +388,6 @@ export default function LoginPage() {
                             <Link
                                 href="/forgot-password"
                                 className="text-primary-600 hover:text-primary-800 text-sm font-medium"
-                                onClick={() =>
-                                    console.log(
-                                        "[DEBUG] Forgot password link clicked"
-                                    )
-                                }
                             >
                                 Forgot password?
                             </Link>
@@ -470,11 +403,6 @@ export default function LoginPage() {
                             disabled={isLoading}
                             className="mt-4 py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
                             endIcon={!isLoading && <ArrowForwardIcon />}
-                            onClick={() =>
-                                console.log(
-                                    "[DEBUG] Submit button clicked - form will be validated"
-                                )
-                            }
                         >
                             {isLoading ? "Signing in..." : "Sign In"}
                         </Button>
@@ -498,11 +426,6 @@ export default function LoginPage() {
                                 <Link
                                     href="/register"
                                     className="text-primary-600 hover:text-primary-800 font-medium"
-                                    onClick={() =>
-                                        console.log(
-                                            "[DEBUG] Register link clicked"
-                                        )
-                                    }
                                 >
                                     Create an account
                                 </Link>
@@ -514,9 +437,7 @@ export default function LoginPage() {
         </div>
     ) : (
         <div className="min-h-screen flex items-center justify-center">
-            <div className="w-full max-w-md p-8">
-                {/* Simple loading UI that matches server render */}
-            </div>
+            <div className="w-full max-w-md p-8"></div>
         </div>
     );
 }
