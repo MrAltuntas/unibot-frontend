@@ -77,10 +77,7 @@ export default function LoginPage() {
         try {
             await login(data.email, data.password, data.rememberMe);
             setLoginSuccess(true);
-
-            setTimeout(() => {
-                router.push("/");
-            }, 2000);
+            router.push("/dashboard");
         } catch (error: any) {
             const errorMsg = error.message?.toLowerCase() || "";
 
