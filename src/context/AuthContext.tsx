@@ -71,11 +71,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const response = await loginApi({ email, password });
 
             if (response.error) {
-                throw new Error(
+                const err: any = new Error(
                     typeof response.error === "string"
                         ? response.error
                         : "Invalid credentials"
                 );
+
+                if (response.status) err.status = response.status;
+                if (response.statusCode) err.statusCode = response.statusCode;
+                throw err;
             }
 
             if (!response.data) {
