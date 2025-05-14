@@ -57,24 +57,20 @@ const useMutateApi = ({
         if (response.message !== undefined) {
             switch (response.status) {
                 case 400:
-                    const errorMessage =
-                        response.data?.error?.message ||
-                        response.data?.error ||
-                        "An unexpected error occurred";
+                    const errorMessages = response.data && response.data.Errors && Array.isArray(response.data.Errors) 
+                        ? response.data.Errors.map((err: { Message: string }) => err.Message).join('. ')
+                        : '';
+                    const errorMessage: string = errorMessages || response.data?.error || 'An unexpected error occurred';
 
                     setResponseData({
                         loading: false,
-                        error: response.data.Errors.map(
-                            (err: { Message: string }) => err.Message
-                        ).join('. '),
+                        error: errorMessage,
                         data: null,
                     });
 
                     return {
                         data: null,
-                        error: response.data.Errors.map(
-                            (err: { Message: string }) => err.Message
-                        ).join('. '),
+                        error: errorMessage,
                         loading: false,
                     };
                 case 404:
