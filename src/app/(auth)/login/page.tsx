@@ -173,7 +173,7 @@ export default function LoginPage() {
                         </Typography>
                     </div>
 
-                    {isMounted && registered && (
+                    {registered && (
                         <Alert
                             severity="success"
                             className="mb-6"
@@ -190,7 +190,7 @@ export default function LoginPage() {
                         </Alert>
                     )}
 
-                    {isMounted && isUnverifiedEmail && (
+                    {isUnverifiedEmail && (
                         <Alert
                             severity="warning"
                             className="mb-6"
@@ -225,7 +225,7 @@ export default function LoginPage() {
                         </Alert>
                     )}
 
-                    {isMounted && loginError && (
+                    {loginError && (
                         <Alert
                             severity="error"
                             className="mb-6"
@@ -241,7 +241,7 @@ export default function LoginPage() {
                         </Alert>
                     )}
 
-                    {isMounted && loginSuccess && (
+                    {loginSuccess && (
                         <Alert
                             severity="success"
                             className="mb-6"
