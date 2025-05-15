@@ -60,12 +60,12 @@ This will start the Next.js development server with TurboPack enabled. The appli
 
 ### Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start the development server with TurboPack enabled |
-| `npm run build` | Build the application for production |
-| `npm run start` | Start the production server (run after build) |
-| `npm run lint` | Run ESLint to check for code quality issues |
+| Command         | Description                                         |
+| --------------- | --------------------------------------------------- |
+| `npm run dev`   | Start the development server with TurboPack enabled |
+| `npm run build` | Build the application for production                |
+| `npm run start` | Start the production server (run after build)       |
+| `npm run lint`  | Run ESLint to check for code quality issues         |
 
 ## 📂 Project Structure
 
@@ -102,6 +102,7 @@ This project uses a hybrid approach to styling:
 - **Tailwind CSS**: Layout (flexbox, grid), spacing, colors, and custom styling of MUI components
 
 The design system includes predefined color scales for:
+
 - Primary colors (50-900)
 - Secondary colors (50-900)
 - Gray shades (50-900)
@@ -110,17 +111,21 @@ The design system includes predefined color scales for:
 ### Example Usage
 
 ```jsx
-{/* MUI Component with Tailwind styling */}
-<Button 
-  variant="contained" 
+{
+  /* MUI Component with Tailwind styling */
+}
+;<Button
+  variant="contained"
   color="primary"
   className="shadow-sm hover:shadow-md"
 >
   Submit
 </Button>
 
-{/* Tailwind styled element */}
-<div className="flex flex-col gap-4 p-6 bg-gray-50 rounded-lg">
+{
+  /* Tailwind styled element */
+}
+;<div className="flex flex-col gap-4 p-6 bg-gray-50 rounded-lg">
   <h2 className="text-primary-700 text-xl font-medium">Title</h2>
 </div>
 ```
@@ -188,6 +193,7 @@ See the example at `(ui-kit)/form-usage` for a complete registration form implem
 ### 1. Color System & MUI Components (`(ui-kit)/colors-mui-components`)
 
 This page showcases:
+
 - Color shade systems (primary, secondary, gray, semantic colors)
 - MUI components with Tailwind styling
 - Button variations
@@ -198,6 +204,7 @@ This page showcases:
 ### 2. Form Usage (`(ui-kit)/form-usage`)
 
 This page demonstrates:
+
 - A complete registration form implementation
 - Form validation with react-hook-form
 - MUI form components with Tailwind styling
@@ -208,25 +215,28 @@ This page demonstrates:
 ## 🌟 Best Practices
 
 1. **Component Selection**:
-    - Use MUI for interactive components (buttons, inputs, etc.)
-    - Use Tailwind for layout and styling
+
+   - Use MUI for interactive components (buttons, inputs, etc.)
+   - Use Tailwind for layout and styling
 
 2. **Styling Approach**:
-    - Apply Tailwind classes directly to MUI components via `className` prop
-    - Use MUI's theme for global styling definitions
-    - Override MUI styles when necessary using Tailwind
+
+   - Apply Tailwind classes directly to MUI components via `className` prop
+   - Use MUI's theme for global styling definitions
+   - Override MUI styles when necessary using Tailwind
 
 3. **Form Implementation**:
-    - Always use react-hook-form for form state and validation
-    - Wrap MUI inputs with Controller component
-    - Implement field-level validation rules
-    - Use the useMutateApi hook for form submission
+
+   - Always use react-hook-form for form state and validation
+   - Wrap MUI inputs with Controller component
+   - Implement field-level validation rules
+   - Use the useMutateApi hook for form submission
 
 4. **Project Organization**:
-    - Create reusable components
-    - Separate business logic using custom hooks
-    - Follow the Next.js App Router structure
-    - Use TypeScript for type safety
+   - Create reusable components
+   - Separate business logic using custom hooks
+   - Follow the Next.js App Router structure
+   - Use TypeScript for type safety
 
 ## 🌿 Branching Strategy
 
