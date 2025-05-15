@@ -1,1 +1,1 @@
-export { default as ChatBot } from "@/UI/ChatBot";
+export { default as ChatBot } from '@/UI/ChatBot'

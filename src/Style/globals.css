@@ -1,6 +1,6 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-@theme{
+@theme {
   /* Primary colors (blue) */
   --color-primary-50: oklch(0.95 0.03 250.37);
   --color-primary-100: oklch(0.89 0.07 251.32);

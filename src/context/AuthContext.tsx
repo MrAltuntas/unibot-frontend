@@ -1,120 +1,101 @@
-"use client";
-import React, { createContext, useContext, useState, useEffect } from "react";
-import useMutateApi from "@/Hooks/useMutateApi";
-import { useRouter } from "next/navigation";
+'use client'
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import useMutateApi from '@/Hooks/useMutateApi'
+import { usePathname, useRouter } from 'next/navigation'
+import { deleteCookie, getCookie, hasCookie, setCookie } from 'cookies-next'
 
 type User = {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-};
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+}
 
 type AuthContextType = {
-    user: User | null;
-    isLoading: boolean;
-    login: (
-        email: string,
-        password: string,
-        rememberMe?: boolean
-    ) => Promise<void>;
-    logout: () => void;
-    isAuthenticated: boolean;
-};
+  user: User | null
+  isLoading: boolean
+  setUserData: (user: User) => void
+  isAuthenticated: boolean
+}
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const router = useRouter();
+  const pathname = usePathname()
 
-    const [loginApi] = useMutateApi({
-        apiPath: `/sessions/login`,
-        method: "POST",
-    });
+  const [user, setUser] = useState<User | null>(null)
+  const router = useRouter()
 
-    const [checkTokenApi] = useMutateApi({
-        apiPath: `/sessions/checkAccessToken`,
-        method: "POST",
-    });
+  const [checkAccessToken, accessTokenLoading] = useMutateApi({
+    apiPath: `/sessions/checkAccessToken`,
+    method: 'POST',
+  })
 
-    useEffect(() => {
-        const initAuth = async () => {
-            const token = localStorage.getItem("accessToken");
-            if (token) {
-                try {
-                    const response = await checkTokenApi({});
-                    if (response.error === null && response.data?.user) {
-                        setUser(response.data.user);
-                    } else {
-                        logout();
-                    }
-                } catch (error) {
-                    logout();
-                }
+  const [refreshTokenApi, refreshTokenLoading] = useMutateApi({
+    apiPath: '/sessions/refresh',
+    header: { 'x-refresh': getCookie('refreshToken') },
+  })
+
+  const checkAuthorize = async () => {
+    if (hasCookie('refreshToken') && hasCookie('accessToken')) {
+      checkAccessToken({}).then(async (isAuth: any, count = 1) => {
+        if (!isAuth.error) {
+          const userData = {
+            ...isAuth.data.user,
+            id: isAuth.data.user._id,
+            isAuthenticated: true,
+          }
+          setUser(userData)
+        } else {
+          if (count < 2) {
+            deleteCookie('accessToken')
+
+            const refreshResponse = await refreshTokenApi({})
+            if (refreshResponse.error !== null) {
+              return pathname === 'dashboard' && router.push('/')
             }
-            setIsLoading(false);
-        };
-
-        initAuth();
-    }, []);
-
-    const login = async (
-        email: string,
-        password: string,
-        rememberMe = false
-    ) => {
-        setIsLoading(true);
-
-        try {
-            const response = await loginApi({ email, password });
-
-            if (response.error === null && response.data) {
-                const { accessToken, refreshToken, user } = response.data;
-
-                localStorage.setItem("accessToken", accessToken);
-                if (rememberMe && refreshToken) {
-                    localStorage.setItem("refreshToken", refreshToken);
-                }
-
-                setUser(user);
-            } else {
-                throw new Error(
-                    response.error?.message || "Invalid credentials"
-                );
+            const userData = {
+              ...refreshResponse.data.user,
+              id: isAuth.data.user._id,
+              isAuthenticated: true,
             }
-        } finally {
-            setIsLoading(false);
+            setUser(userData)
+
+            return setCookie('accessToken', refreshResponse.data.accessToken)
+          }
+          pathname === 'dashboard' && router.push('/')
         }
-    };
+      })
+    } else {
+      pathname === 'dashboard' && router.push('/')
+    }
+  }
+  useEffect(() => {
+    checkAuthorize()
+  }, [pathname])
 
-    const logout = () => {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        setUser(null);
-        router.push("/login");
-    };
+  const setUserData = (user: User) => {
+    setUser(user)
+  }
 
-    return (
-        <AuthContext.Provider
-            value={{
-                user,
-                isLoading,
-                login,
-                logout,
-                isAuthenticated: !!user,
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
-    );
-};
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        setUserData,
+        isLoading: accessTokenLoading || refreshTokenLoading,
+        isAuthenticated: !!user,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
+}
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
-    return context;
-};
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
