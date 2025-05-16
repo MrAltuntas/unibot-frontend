@@ -14,7 +14,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 bg-white p-6 rounded-xl shadow">
+    <div className="mx-auto mt-10 bg-white p-6 rounded-xl shadow">
       <Typography variant="h4" className="mb-4">
         User Settings
       </Typography>
