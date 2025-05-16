@@ -42,7 +42,7 @@ export default function InstitutionForm() {
     const fetchInstitution = async () => {
         setLoading(true);
         try {
-            const { data } = await axios.get('/api/institution'); // Replace or mock if needed
+            const { data } = await axios.get('./Institution/GetInstitutionByIdSchema');
             if (data) {
                 setForm(data);
                 setInstitutionId(data._id);
@@ -62,10 +62,10 @@ export default function InstitutionForm() {
         setLoading(true);
         try {
             if (institutionId) {
-                await axios.put(`/api/institution/${institutionId}`, form);
+                await axios.put(`./Institution/EditInstitutionByIdSchema`, form);
                 setAlert({ open: true, type: 'success', message: 'Institution updated successfully.' });
             } else {
-                const { data } = await axios.post('/api/institution', form);
+                const { data } = await axios.post('./Institution/AddInstitutionSchema', form);
                 setInstitutionId(data._id);
                 setAlert({ open: true, type: 'success', message: 'Institution created successfully.' });
             }
