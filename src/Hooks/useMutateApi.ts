@@ -44,7 +44,6 @@ const useMutateApi = ({
         Accept: 'application/json',
         'Content-Type': contentType,
         'Accept-Language': 'tr',
-        credentials: 'include',
         Authorization: `Bearer ${getCookie('accessToken')}`,
         ...header,
       },
