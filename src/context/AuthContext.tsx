@@ -63,11 +63,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             return setCookie('accessToken', refreshResponse.data.accessToken)
           }
-          pathname === 'dashboard' && router.push('/')
+          pathname === '/dashboard' && router.push('/')
         }
       })
     } else {
-      pathname === 'dashboard' && router.push('/')
+      pathname === '/dashboard' && router.push('/')
     }
   }
   useEffect(() => {
