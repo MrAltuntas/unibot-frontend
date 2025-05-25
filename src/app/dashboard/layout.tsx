@@ -1,7 +1,7 @@
 // layout.tsx - MUI Dashboard Layout for /dashboard route
-"use client";
-import ListItemButton from "@mui/material/ListItemButton";
-import React from "react";
+'use client'
+import ListItemButton from '@mui/material/ListItemButton'
+import React from 'react'
 import {
   Box,
   CssBaseline,
@@ -16,26 +16,27 @@ import {
   ListItemText,
   Avatar,
   CircularProgress,
-} from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
-import HomeIcon from "@mui/icons-material/Home";
-import SettingsIcon from "@mui/icons-material/Settings";
-import LogoutIcon from "@mui/icons-material/Logout";
-import { useState } from "react";
+} from '@mui/material'
+import MenuIcon from '@mui/icons-material/Menu'
+import HomeIcon from '@mui/icons-material/Home'
+import SettingsIcon from '@mui/icons-material/Settings'
+import LogoutIcon from '@mui/icons-material/Logout'
+import { useState } from 'react'
+import Link from 'next/link'
 
-const drawerWidth = 240;
+const drawerWidth = 240
 
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
+    setMobileOpen(!mobileOpen)
+  }
 
   const drawer = (
     <div>
@@ -52,23 +53,28 @@ export default function DashboardLayout({
       </Toolbar>
       <List>
         {[
-          { text: "Home", icon: <HomeIcon /> },
-          { text: "Settings", icon: <SettingsIcon /> },
-          { text: "Logout", icon: <LogoutIcon /> },
-        ].map(({ text, icon }) => (
+          {
+            text: 'Categories',
+            href: '/dashboard/institutions',
+            icon: <HomeIcon />,
+          },
+          { text: 'Logout', href: '/dashboard', icon: <LogoutIcon /> },
+        ].map(({ text, icon, href }) => (
           <ListItem key={text} disablePadding>
-            <ListItemButton>
-              <ListItemIcon>{icon}</ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItemButton>
+            <Link href={href}>
+              <ListItemButton>
+                <ListItemIcon>{icon}</ListItemIcon>
+                <ListItemText primary={text} />
+              </ListItemButton>
+            </Link>
           </ListItem>
         ))}
       </List>
     </div>
-  );
+  )
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <AppBar
         position="fixed"
@@ -83,7 +89,7 @@ export default function DashboardLayout({
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }}
+            sx={{ mr: 2, display: { sm: 'none' } }}
           >
             <MenuIcon />
           </IconButton>
@@ -105,9 +111,9 @@ export default function DashboardLayout({
           onClose={handleDrawerToggle}
           ModalProps={{ keepMounted: true }}
           sx={{
-            display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
+            display: { xs: 'block', sm: 'none' },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
               width: drawerWidth,
             },
           }}
@@ -117,9 +123,9 @@ export default function DashboardLayout({
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: "none", sm: "block" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
+            display: { xs: 'none', sm: 'block' },
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
               width: drawerWidth,
             },
           }}
@@ -153,5 +159,5 @@ export default function DashboardLayout({
         )}
       </Box>
     </Box>
-  );
+  )
 }
