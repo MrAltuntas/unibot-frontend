@@ -30,7 +30,7 @@ type TEditInstitutionForm = {
 const EditInstitution = () => {
   const router = useRouter()
   const params = useParams()
-  const institutionId = params.id as string
+  const institutionId = params?.id as string
 
   const [isLoading, setIsLoading] = useState(true)
   const [updateSuccess, setUpdateSuccess] = useState(false)
@@ -55,7 +55,7 @@ const EditInstitution = () => {
   })
 
   const [updateInstitution, updateInstitutionLoading] = useMutateApi({
-    apiPath: `/institution/update-institution-by-id`,
+    apiPath: `/institution/edit-institution-by-id`,
     method: 'PUT',
   })
 
@@ -67,7 +67,7 @@ const EditInstitution = () => {
       }
 
       try {
-        const response = await getInstitution({}, institutionId)
+        const response = await getInstitution({}, { id: institutionId })
 
         if (response && response.error === null && response.data) {
           const institution = response.data
@@ -89,7 +89,9 @@ const EditInstitution = () => {
 
   const onSubmit = async (data: TEditInstitutionForm) => {
     try {
-      const updateResponse = await updateInstitution(data, institutionId)
+      const updateResponse = await updateInstitution(data, {
+        id: institutionId,
+      })
 
       if (updateResponse && updateResponse.error === null) {
         setUpdateSuccess(true)
