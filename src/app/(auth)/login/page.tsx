@@ -283,7 +283,8 @@ const LoginPage = () => {
                 className="text-primary-600 hover:text-primary-800 font-medium"
               >
                 <Typography variant="body2" className="text-gray-600">
-                  Dont have an account? Create an account
+                  Dont have an account?{' '}
+                  <span className="text-primary-600">Create an account</span>
                 </Typography>
               </Link>
             </div>
