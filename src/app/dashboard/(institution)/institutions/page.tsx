@@ -48,12 +48,12 @@ const Institutions = () => {
   const router = useRouter()
 
   const [getInstitutions, institutionsLoading] = useMutateApi({
-    apiPath: `/institution/get-institutions`,
+    apiPath: `/category/get-Categories`,
     method: 'GET',
   })
 
   const [deleteInstitution, deleteLoading] = useMutateApi({
-    apiPath: `/institution/delete-institution-by-id`,
+    apiPath: `/category/delete-Category-by-id`,
     method: 'DELETE',
   })
 
@@ -85,35 +85,37 @@ const Institutions = () => {
   }
 
   const handleDeleteConfirm = async () => {
-    if (!selectedInstitution || deleteLoading) {
+    if (!selectedInstitution) {
       return
     }
 
     try {
-      const deleteResponse = await deleteInstitution(
-        {},
-        { id: selectedInstitution._id },
-      )
-      console.log('Delete Response:', deleteResponse) // Debug the actual response
+      const token = getCookie('accessToken')
+      const apiUrl =
+        process.env.NEXT_PUBLIC_REACT_APP_API_URL ||
+        'http://localhost:5000/api/v1'
 
-      // For DELETE operations, success might be indicated by no error rather than specific data
-      if (
-        deleteResponse &&
-        (deleteResponse.error === null || deleteResponse.error === undefined)
-      ) {
+      const response = await axios.delete(
+        `${apiUrl}/category/delete-Category-by-id/${selectedInstitution._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+
+      if (response.status === 200) {
         setSnackbar({
           open: true,
           message: 'Category deleted successfully!',
           severity: 'success',
         })
-
         await fetchData()
       } else {
         setSnackbar({
           open: true,
-          message:
-            deleteResponse?.error ||
-            'Failed to delete category. Please try again.',
+          message: 'Failed to delete category. Please try again.',
           severity: 'error',
         })
       }

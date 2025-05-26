@@ -12,6 +12,7 @@ import SchoolIcon from '@mui/icons-material/School'
 import DescriptionIcon from '@mui/icons-material/Description'
 import SmartToyIcon from '@mui/icons-material/SmartToy'
 import LanguageIcon from '@mui/icons-material/Language'
+import DataObjectIcon from '@mui/icons-material/DataObject'
 import useMutateApi from '@/Hooks/useMutateApi'
 import { useRouter } from 'next/navigation'
 
@@ -19,6 +20,7 @@ type TAddInstitutionForm = {
   title: string
   description: string
   systemPrompt: string
+  data: string
   url: string
 }
 
@@ -26,6 +28,7 @@ const initialValues: TAddInstitutionForm = {
   title: '',
   description: '',
   systemPrompt: '',
+  data: '',
   url: '',
 }
 
@@ -40,7 +43,7 @@ const AddInstitution = () => {
   })
 
   const [addInstitutions, institutionsLoading] = useMutateApi({
-    apiPath: `/institution/add-institution`,
+    apiPath: `/category/add-category`,
     method: 'POST',
   })
 
@@ -68,7 +71,6 @@ const AddInstitution = () => {
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-y-6"
         >
-          {/* Title Field */}
           <Controller
             name="title"
             control={control}
@@ -99,7 +101,6 @@ const AddInstitution = () => {
             )}
           />
 
-          {/* Description Field */}
           <Controller
             name="description"
             control={control}
@@ -132,7 +133,6 @@ const AddInstitution = () => {
             )}
           />
 
-          {/* System Prompt Field */}
           <Controller
             name="systemPrompt"
             control={control}
@@ -165,7 +165,39 @@ const AddInstitution = () => {
             )}
           />
 
-          {/* URL Field */}
+          <Controller
+            name="data"
+            control={control}
+            rules={{
+              required: 'Data is required',
+              minLength: {
+                value: 10,
+                message: 'Data must be at least 10 characters',
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Category Data"
+                variant="outlined"
+                fullWidth
+                multiline
+                rows={5}
+                error={!!errors.data}
+                helperText={errors.data?.message}
+                className="bg-white"
+                placeholder="Enter additional category data or content..."
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <DataObjectIcon className="text-gray-500" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            )}
+          />
+
           <Controller
             name="url"
             control={control}
@@ -198,7 +230,6 @@ const AddInstitution = () => {
             )}
           />
 
-          {/* Submit Button */}
           <Button
             type="submit"
             variant="contained"

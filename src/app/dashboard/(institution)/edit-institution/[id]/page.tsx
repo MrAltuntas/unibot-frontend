@@ -14,6 +14,7 @@ import SchoolIcon from '@mui/icons-material/School'
 import DescriptionIcon from '@mui/icons-material/Description'
 import SmartToyIcon from '@mui/icons-material/SmartToy'
 import LanguageIcon from '@mui/icons-material/Language'
+import DataObjectIcon from '@mui/icons-material/DataObject'
 import SaveIcon from '@mui/icons-material/Save'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import useMutateApi from '@/Hooks/useMutateApi'
@@ -24,6 +25,7 @@ type TEditInstitutionForm = {
   title: string
   description: string
   systemPrompt: string
+  data: string
   url: string
 }
 
@@ -45,17 +47,18 @@ const EditInstitution = () => {
       title: '',
       description: '',
       systemPrompt: '',
+      data: '',
       url: '',
     },
   })
 
   const [getInstitution, getInstitutionLoading] = useMutateApi({
-    apiPath: `/institution/get-institution-by-id`,
+    apiPath: `/category/get-category-by-id/${institutionId}`,
     method: 'GET',
   })
 
   const [updateInstitution, updateInstitutionLoading] = useMutateApi({
-    apiPath: `/institution/edit-institution-by-id`,
+    apiPath: `/category/edit-category-by-id/${institutionId}`,
     method: 'PUT',
   })
 
@@ -67,7 +70,7 @@ const EditInstitution = () => {
       }
 
       try {
-        const response = await getInstitution({}, { id: institutionId })
+        const response = await getInstitution({})
 
         if (response && response.error === null && response.data) {
           const institution = response.data
@@ -75,6 +78,7 @@ const EditInstitution = () => {
           setValue('title', institution.title || '')
           setValue('description', institution.description || '')
           setValue('systemPrompt', institution.systemPrompt || '')
+          setValue('data', institution.data || '')
           setValue('url', institution.url || '')
         }
       } catch (error) {
@@ -89,9 +93,15 @@ const EditInstitution = () => {
 
   const onSubmit = async (data: TEditInstitutionForm) => {
     try {
-      const updateResponse = await updateInstitution(data, {
-        id: institutionId,
-      })
+      const updatePayload = {
+        title: data.title,
+        description: data.description,
+        systemPrompt: data.systemPrompt,
+        data: data.data,
+        url: data.url,
+      }
+
+      const updateResponse = await updateInstitution(updatePayload)
 
       if (updateResponse && updateResponse.error === null) {
         setUpdateSuccess(true)
@@ -100,7 +110,7 @@ const EditInstitution = () => {
         }, 1500)
       }
     } catch (error) {
-      console.error('Error updating institution:', error)
+      console.error('Update exception:', error)
     }
   }
 
@@ -113,6 +123,7 @@ const EditInstitution = () => {
           <Skeleton variant="rectangular" height={56} className="mb-6" />
           <Skeleton variant="rectangular" height={120} className="mb-6" />
           <Skeleton variant="rectangular" height={160} className="mb-6" />
+          <Skeleton variant="rectangular" height={120} className="mb-6" />
           <Skeleton variant="rectangular" height={56} className="mb-6" />
           <Skeleton variant="rectangular" height={48} />
         </Paper>
@@ -155,7 +166,6 @@ const EditInstitution = () => {
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col gap-y-6"
         >
-          {/* Title Field */}
           <Controller
             name="title"
             control={control}
@@ -186,7 +196,6 @@ const EditInstitution = () => {
             )}
           />
 
-          {/* Description Field */}
           <Controller
             name="description"
             control={control}
@@ -219,7 +228,6 @@ const EditInstitution = () => {
             )}
           />
 
-          {/* System Prompt Field */}
           <Controller
             name="systemPrompt"
             control={control}
@@ -252,7 +260,39 @@ const EditInstitution = () => {
             )}
           />
 
-          {/* URL Field */}
+          <Controller
+            name="data"
+            control={control}
+            rules={{
+              required: 'Data is required',
+              minLength: {
+                value: 10,
+                message: 'Data must be at least 10 characters',
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Category Data"
+                variant="outlined"
+                fullWidth
+                multiline
+                rows={5}
+                error={!!errors.data}
+                helperText={errors.data?.message}
+                className="bg-white"
+                placeholder="Enter additional category data or content..."
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <DataObjectIcon className="text-gray-500" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            )}
+          />
+
           <Controller
             name="url"
             control={control}
@@ -285,7 +325,6 @@ const EditInstitution = () => {
             )}
           />
 
-          {/* Submit Button */}
           <Button
             type="submit"
             variant="contained"

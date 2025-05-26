@@ -109,7 +109,29 @@ export default function DashboardLayout({
   })
   const [darkMode, setDarkMode] = useState(false)
 
-  const { userData } = useAuth()
+  const { userData, logout } = useAuth() // Make sure to destructure logout from useAuth
+
+  // Add logout handler
+  const handleLogout = async () => {
+    try {
+      console.log('🚪 Logging out user...')
+
+      // Call the logout function from AuthContext
+      await logout()
+
+      // Close any open menus
+      setAnchorEl(null)
+
+      console.log('✅ Logout successful, redirecting...')
+
+      // Redirect to login page
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('❌ Logout error:', error)
+      // Even if logout fails, redirect to login
+      window.location.href = '/login'
+    }
+  }
 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -448,6 +470,7 @@ export default function DashboardLayout({
           <Button
             fullWidth
             startIcon={<LogoutIcon />}
+            onClick={handleLogout} // Add onClick handler
             sx={{
               color: '#f87171',
               justifyContent: 'flex-start',
@@ -657,7 +680,10 @@ export default function DashboardLayout({
           Account Settings
         </MenuItem>
         <Divider />
-        <MenuItem sx={{ '&:hover': { bgcolor: '#fef2f2' }, color: '#dc2626' }}>
+        <MenuItem
+          onClick={handleLogout} // Add onClick handler
+          sx={{ '&:hover': { bgcolor: '#fef2f2' }, color: '#dc2626' }}
+        >
           <LogoutIcon sx={{ mr: 2 }} />
           Sign Out
         </MenuItem>
