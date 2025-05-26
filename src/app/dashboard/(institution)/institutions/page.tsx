@@ -94,8 +94,13 @@ const Institutions = () => {
         {},
         { id: selectedInstitution._id },
       )
+      console.log('Delete Response:', deleteResponse) // Debug the actual response
 
-      if (deleteResponse && deleteResponse.error === null) {
+      // For DELETE operations, success might be indicated by no error rather than specific data
+      if (
+        deleteResponse &&
+        (deleteResponse.error === null || deleteResponse.error === undefined)
+      ) {
         setSnackbar({
           open: true,
           message: 'Category deleted successfully!',
