@@ -91,7 +91,9 @@ const Institutions = () => {
         {},
         selectedInstitution._id,
       )
-      console.log('Delete Response:', deleteResponse) // Debug the actual response
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Delete Response:', deleteResponse) // Debug the actual response
+      }
 
       // For DELETE operations, success might be indicated by no error rather than specific data
       if (
