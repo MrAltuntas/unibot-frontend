@@ -30,6 +30,8 @@ import {
 } from '@mui/icons-material'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import axios from 'axios'
+import { getCookie } from 'cookies-next'
 
 const Institutions = () => {
   const [institutions, setInstitutions] = useState<any[]>([])
@@ -83,30 +85,25 @@ const Institutions = () => {
   }
 
   const handleDeleteConfirm = async () => {
-    if (!selectedInstitution) return
-    if (deleteLoading) return
+    if (!selectedInstitution || deleteLoading) {
+      return
+    }
 
     try {
       const deleteResponse = await deleteInstitution(
         {},
-        selectedInstitution._id,
+        { id: selectedInstitution._id },
       )
-      console.log('Delete Response:', deleteResponse) // Debug the actual response
 
-      // For DELETE operations, success might be indicated by no error rather than specific data
-      if (
-        deleteResponse &&
-        (deleteResponse.error === null || deleteResponse.error === undefined)
-      ) {
+      if (deleteResponse && deleteResponse.error === null) {
         setSnackbar({
           open: true,
           message: 'Category deleted successfully!',
           severity: 'success',
         })
-        // Refresh the list from the server to get the updated data
+
         await fetchData()
       } else {
-        console.error('Delete failed:', deleteResponse)
         setSnackbar({
           open: true,
           message:
@@ -116,7 +113,6 @@ const Institutions = () => {
         })
       }
     } catch (error: any) {
-      console.error('Delete exception:', error)
       setSnackbar({
         open: true,
         message: 'An unexpected error occurred while deleting the category.',

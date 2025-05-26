@@ -50,44 +50,55 @@ const EditInstitution = () => {
   })
 
   const [getInstitution, getInstitutionLoading] = useMutateApi({
-    apiPath: `/institution/get-institution/${institutionId}`,
+    apiPath: `/institution/get-institution-by-id`,
     method: 'GET',
   })
 
   const [updateInstitution, updateInstitutionLoading] = useMutateApi({
-    apiPath: `/institution/update-institution/${institutionId}`,
+    apiPath: `/institution/update-institution-by-id`,
     method: 'PUT',
   })
 
-  // Fetch institution data
   useEffect(() => {
     const fetchInstitution = async () => {
-      if (!institutionId) return
+      if (!institutionId) {
+        setIsLoading(false)
+        return
+      }
 
-      const response = await getInstitution({})
+      try {
+        const response = await getInstitution({}, institutionId)
 
-      if (response.error === null && response.data) {
-        const institution = response.data
-        setValue('title', institution.title)
-        setValue('description', institution.description)
-        setValue('systemPrompt', institution.systemPrompt)
-        setValue('url', institution.url)
+        if (response && response.error === null && response.data) {
+          const institution = response.data
+
+          setValue('title', institution.title || '')
+          setValue('description', institution.description || '')
+          setValue('systemPrompt', institution.systemPrompt || '')
+          setValue('url', institution.url || '')
+        }
+      } catch (error) {
+        console.error('Error fetching institution:', error)
       }
 
       setIsLoading(false)
     }
 
     fetchInstitution()
-  }, [institutionId])
+  }, [institutionId, setValue])
 
   const onSubmit = async (data: TEditInstitutionForm) => {
-    const updateResponse = await updateInstitution(data)
+    try {
+      const updateResponse = await updateInstitution(data, institutionId)
 
-    if (updateResponse.error === null) {
-      setUpdateSuccess(true)
-      setTimeout(() => {
-        router.push('/dashboard/institutions')
-      }, 1500)
+      if (updateResponse && updateResponse.error === null) {
+        setUpdateSuccess(true)
+        setTimeout(() => {
+          router.push('/dashboard/institutions')
+        }, 1500)
+      }
+    } catch (error) {
+      console.error('Error updating institution:', error)
     }
   }
 
@@ -110,7 +121,6 @@ const EditInstitution = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <Paper className="w-full max-w-md p-8 shadow-lg rounded-lg">
-        {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <Link href="/dashboard/institutions">
             <Button
