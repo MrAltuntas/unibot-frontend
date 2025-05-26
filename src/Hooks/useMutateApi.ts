@@ -34,8 +34,9 @@ const useMutateApi = ({
     data: null,
   })
 
-  const fetchApi = async (variables: object, params?: object) => {
+  const fetchApi = async (variables: object, params?: string) => {
     setResponseData({ ...responseData, loading: true })
+
     const axiosConfig = {
       baseURL: baseURL ? baseURL : process.env.NEXT_PUBLIC_REACT_APP_API_URL,
       url: apiPath,
@@ -49,7 +50,7 @@ const useMutateApi = ({
         ...header,
       },
       withCredentials: withCredentials,
-      params: params,
+      params: params ? { id: params } : undefined,
       data: variables,
     }
 
@@ -133,9 +134,16 @@ const useMutateApi = ({
           return { data: null, error: 'beklenmeyen hata', loading: false }
       }
     }
-    setResponseData({ loading: false, error: null, data: response.data.data })
-
-    return { loading: false, error: null, data: response.data.data }
+    setResponseData({
+      loading: false,
+      error: null,
+      data: response.data?.data || response.data,
+    })
+    return {
+      loading: false,
+      error: null,
+      data: response.data?.data || response.data,
+    }
   }
 
   return [fetchApi, responseData.loading, responseData.data]
