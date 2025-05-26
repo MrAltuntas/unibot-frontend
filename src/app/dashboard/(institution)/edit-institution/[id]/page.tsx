@@ -1,5 +1,6 @@
 'use client'
 import { useForm, Controller } from 'react-hook-form'
+import { useEffect, useState } from 'react'
 import {
   TextField,
   Button,
@@ -7,16 +8,20 @@ import {
   Paper,
   Alert,
   InputAdornment,
+  Skeleton,
 } from '@mui/material'
 import SchoolIcon from '@mui/icons-material/School'
 import DescriptionIcon from '@mui/icons-material/Description'
 import SmartToyIcon from '@mui/icons-material/SmartToy'
 import LanguageIcon from '@mui/icons-material/Language'
 import DataObjectIcon from '@mui/icons-material/DataObject'
+import SaveIcon from '@mui/icons-material/Save'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import useMutateApi from '@/Hooks/useMutateApi'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 
-type TAddInstitutionForm = {
+type TEditInstitutionForm = {
   title: string
   description: string
   systemPrompt: string
@@ -24,48 +29,138 @@ type TAddInstitutionForm = {
   url: string
 }
 
-const initialValues: TAddInstitutionForm = {
-  title: '',
-  description: '',
-  systemPrompt: '',
-  data: '',
-  url: '',
-}
-
-const AddInstitution = () => {
+const EditInstitution = () => {
   const router = useRouter()
+  const params = useParams()
+  const institutionId = params?.id as string
+
+  const [isLoading, setIsLoading] = useState(true)
+  const [updateSuccess, setUpdateSuccess] = useState(false)
+
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
-  } = useForm({
-    defaultValues: initialValues,
+  } = useForm<TEditInstitutionForm>({
+    defaultValues: {
+      title: '',
+      description: '',
+      systemPrompt: '',
+      data: '',
+      url: '',
+    },
   })
 
-  const [addInstitutions, institutionsLoading] = useMutateApi({
-    apiPath: `/category/add-category`,
-    method: 'POST',
+  const [getInstitution, getInstitutionLoading] = useMutateApi({
+    apiPath: `/category/get-category-by-id/${institutionId}`,
+    method: 'GET',
   })
 
-  const onSubmit = async (data: TAddInstitutionForm) => {
-    const addInstitutionResponse = await addInstitutions(data)
+  const [updateInstitution, updateInstitutionLoading] = useMutateApi({
+    apiPath: `/category/edit-category-by-id/${institutionId}`,
+    method: 'PUT',
+  })
 
-    if (addInstitutionResponse.error === null) {
-      router.push('/dashboard/institutions')
+  useEffect(() => {
+    const fetchInstitution = async () => {
+      if (!institutionId) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const response = await getInstitution({})
+
+        if (response && response.error === null && response.data) {
+          const institution = response.data
+
+          setValue('title', institution.title || '')
+          setValue('description', institution.description || '')
+          setValue('systemPrompt', institution.systemPrompt || '')
+          setValue('data', institution.data || '')
+          setValue('url', institution.url || '')
+        }
+      } catch (error) {
+        console.error('Error fetching institution:', error)
+      }
+
+      setIsLoading(false)
     }
+
+    fetchInstitution()
+  }, [institutionId, setValue])
+
+  const onSubmit = async (data: TEditInstitutionForm) => {
+    try {
+      const updatePayload = {
+        title: data.title,
+        description: data.description,
+        systemPrompt: data.systemPrompt,
+        data: data.data,
+        url: data.url,
+      }
+
+      const updateResponse = await updateInstitution(updatePayload)
+
+      if (updateResponse && updateResponse.error === null) {
+        setUpdateSuccess(true)
+        setTimeout(() => {
+          router.push('/dashboard/institutions')
+        }, 1500)
+      }
+    } catch (error) {
+      console.error('Update exception:', error)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+        <Paper className="w-full max-w-md p-8 shadow-lg rounded-lg">
+          <Skeleton variant="text" height={40} className="mb-4" />
+          <Skeleton variant="text" height={20} className="mb-8" />
+          <Skeleton variant="rectangular" height={56} className="mb-6" />
+          <Skeleton variant="rectangular" height={120} className="mb-6" />
+          <Skeleton variant="rectangular" height={160} className="mb-6" />
+          <Skeleton variant="rectangular" height={120} className="mb-6" />
+          <Skeleton variant="rectangular" height={56} className="mb-6" />
+          <Skeleton variant="rectangular" height={48} />
+        </Paper>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
       <Paper className="w-full max-w-md p-8 shadow-lg rounded-lg">
+        <div className="flex items-center gap-3 mb-8">
+          <Link href="/dashboard/institutions">
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<ArrowBackIcon />}
+              className="border-gray-300 text-gray-600 hover:bg-gray-50"
+            >
+              Back
+            </Button>
+          </Link>
+        </div>
+
         <div className="text-center mb-8">
           <Typography variant="h4" className="text-primary-700 font-bold mb-2">
-            Add Category
+            Edit Category
           </Typography>
           <Typography variant="body2" className="text-gray-600">
-            Create a new category for chatbot
+            Update the category information and settings
           </Typography>
         </div>
+
+        {updateSuccess && (
+          <Alert severity="success" className="mb-6">
+            Category updated successfully! Redirecting...
+          </Alert>
+        )}
 
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -236,10 +331,13 @@ const AddInstitution = () => {
             color="primary"
             fullWidth
             size="large"
-            disabled={institutionsLoading}
+            disabled={updateInstitutionLoading}
+            startIcon={<SaveIcon />}
             className="bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-md shadow-md hover:shadow-lg transition-all duration-200"
           >
-            {institutionsLoading ? 'Adding Institution...' : 'Add Institution'}
+            {updateInstitutionLoading
+              ? 'Updating Category...'
+              : 'Update Category'}
           </Button>
         </form>
       </Paper>
@@ -247,4 +345,4 @@ const AddInstitution = () => {
   )
 }
 
-export default AddInstitution
+export default EditInstitution
