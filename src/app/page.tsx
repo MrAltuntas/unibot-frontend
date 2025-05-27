@@ -177,11 +177,9 @@ export default function HomePage() {
 
   return (
     <div className={`${inter.className} min-h-screen overflow-x-hidden`}>
-      {/* Fixed Header */}
       <Box className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
         <Container maxWidth="xl">
           <Box className="flex items-center justify-between h-16">
-            {/* Logo Section - Left Aligned */}
             <Box className="flex items-center gap-3">
               <Box className="relative">
                 <Avatar className="bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg w-10 h-10">
@@ -202,7 +200,6 @@ export default function HomePage() {
               </Box>
             </Box>
 
-            {/* Auth Buttons - Right Aligned */}
             <Box className="flex items-center gap-3">
               <Link href="/login">
                 <Button
@@ -227,9 +224,7 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      {/* Hero Section */}
       <Box className="relative min-h-screen flex items-center bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 pt-16">
-        {/* Background Animation */}
         <Box className="absolute inset-0 overflow-hidden">
           <Box className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob" />
           <Box className="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob animation-delay-2000" />
@@ -237,13 +232,10 @@ export default function HomePage() {
         </Box>
 
         <Container maxWidth="lg" className="relative z-10 py-20">
-          {/* Replace Grid with CSS Grid */}
           <Box className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
-            {/* Left Column - Text Content */}
             <Box>
               <Fade in={isVisible} timeout={1000}>
                 <Box className="text-center lg:text-left">
-                  {/* Badge */}
                   <Box className="mb-6">
                     <Chip
                       label="🤖 Powered by Advanced AI"
@@ -253,7 +245,6 @@ export default function HomePage() {
                     />
                   </Box>
 
-                  {/* Main Heading */}
                   <Typography
                     variant="h1"
                     className="text-gray-900 font-bold mb-6 leading-tight"
@@ -277,7 +268,6 @@ export default function HomePage() {
                     Assistant
                   </Typography>
 
-                  {/* Subtitle */}
                   <Typography
                     variant="h6"
                     className="text-gray-600 mb-8 leading-relaxed max-w-xl"
@@ -288,7 +278,6 @@ export default function HomePage() {
                     intelligent AI assistant.
                   </Typography>
 
-                  {/* Action Buttons */}
                   <Box className="flex flex-col sm:flex-row gap-4 mb-10 justify-center lg:justify-start">
                     <Link href="/chatbot">
                       <Button
@@ -315,7 +304,6 @@ export default function HomePage() {
                     </Button>
                   </Box>
 
-                  {/* Stats Grid - Replace with CSS Grid */}
                   <Box className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mx-auto lg:mx-0">
                     {stats.slice(0, isMobile ? 2 : 4).map((stat, index) => (
                       <Box key={index} className="text-center lg:text-left">
@@ -338,13 +326,11 @@ export default function HomePage() {
               </Fade>
             </Box>
 
-            {/* Right Column - Bot Card */}
             <Box>
               <Slide direction="left" in={isVisible} timeout={1200}>
                 <Box className="flex justify-center lg:justify-end">
                   <Card className="bg-white/90 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden max-w-md w-full">
                     <CardContent className="p-8">
-                      {/* Bot Avatar */}
                       <Box className="text-center mb-6">
                         <Box className="relative inline-block">
                           <Avatar className="w-24 h-24 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 shadow-2xl mx-auto">
@@ -356,7 +342,6 @@ export default function HomePage() {
                         </Box>
                       </Box>
 
-                      {/* Bot Introduction */}
                       <Box className="text-center mb-6">
                         <Typography
                           variant="h5"
@@ -370,7 +355,6 @@ export default function HomePage() {
                         </Typography>
                       </Box>
 
-                      {/* Chat Preview */}
                       <Box className="bg-gray-50 rounded-2xl p-4 mb-6">
                         <Box className="space-y-3">
                           <Box className="bg-white rounded-lg p-3 shadow-sm text-right">
@@ -390,7 +374,6 @@ export default function HomePage() {
                         </Box>
                       </Box>
 
-                      {/* Feature Tags */}
                       <Box className="flex flex-wrap justify-center gap-2">
                         {[
                           'Course Help',
@@ -416,10 +399,8 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      {/* Features Section */}
       <Box id="features" className="py-20 bg-white">
         <Container maxWidth="lg">
-          {/* Section Header */}
           <Box className="text-center mb-16">
             <Chip
               label="✨ Features"
@@ -442,13 +423,11 @@ export default function HomePage() {
             </Typography>
           </Box>
 
-          {/* Features Grid - Replace with CSS Grid */}
           <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Zoom key={index} in={isVisible} timeout={1000 + index * 200}>
                 <Card className="h-full bg-white hover:bg-gray-50 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 border-0 shadow-lg rounded-2xl overflow-hidden group">
                   <CardContent className="p-6 text-center">
-                    {/* Icon */}
                     <Box
                       className="w-16 h-16 rounded-2xl mb-6 flex items-center justify-center text-2xl transition-all duration-300 group-hover:scale-110 mx-auto"
                       sx={{
@@ -459,7 +438,6 @@ export default function HomePage() {
                       {feature.icon}
                     </Box>
 
-                    {/* Title */}
                     <Typography
                       variant="h6"
                       className="font-bold text-gray-900 mb-3"
@@ -467,7 +445,6 @@ export default function HomePage() {
                       {feature.title}
                     </Typography>
 
-                    {/* Description */}
                     <Typography className="text-gray-600 leading-relaxed">
                       {feature.description}
                     </Typography>
@@ -479,10 +456,8 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      {/* Testimonials Section */}
       <Box className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
         <Container maxWidth="lg">
-          {/* Section Header */}
           <Box className="text-center mb-16">
             <Chip
               label="💬 Testimonials"
@@ -501,7 +476,6 @@ export default function HomePage() {
             </Typography>
           </Box>
 
-          {/* Testimonial Carousel */}
           <Box className="relative max-w-3xl mx-auto">
             {testimonials.map((testimonial, index) => (
               <Fade
@@ -516,10 +490,8 @@ export default function HomePage() {
               >
                 <Card className="bg-white shadow-xl border-0 rounded-3xl overflow-hidden">
                   <CardContent className="p-8 sm:p-12 text-center">
-                    {/* Avatar */}
                     <Box className="text-5xl mb-6">{testimonial.avatar}</Box>
 
-                    {/* Rating */}
                     <Box className="flex justify-center gap-1 mb-6">
                       {Array.from({ length: testimonial.rating }).map(
                         (_, i) => (
@@ -531,7 +503,6 @@ export default function HomePage() {
                       )}
                     </Box>
 
-                    {/* Quote */}
                     <Typography
                       variant="h6"
                       className="text-gray-800 mb-6 font-light italic leading-relaxed"
@@ -539,7 +510,6 @@ export default function HomePage() {
                       &ldquo;{testimonial.content}&rdquo;
                     </Typography>
 
-                    {/* Author */}
                     <Typography
                       variant="h6"
                       className="font-bold text-gray-900 mb-1"
@@ -554,7 +524,6 @@ export default function HomePage() {
               </Fade>
             ))}
 
-            {/* Navigation Dots */}
             <Box className="flex justify-center gap-2 mt-8">
               {testimonials.map((_, index) => (
                 <Box
@@ -572,7 +541,6 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      {/* CTA Section */}
       <Box className="py-20 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">
         <Container maxWidth="md">
           <Box className="text-center text-white">
@@ -617,10 +585,8 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      {/* FAQ Section */}
       <Box id="faq" className="py-20 bg-white">
         <Container maxWidth="md">
-          {/* Section Header */}
           <Box className="text-center mb-16">
             <Chip
               label="❓ FAQ"
@@ -639,7 +605,6 @@ export default function HomePage() {
             </Typography>
           </Box>
 
-          {/* FAQ Accordion */}
           <Box className="space-y-4">
             {faqs.map((faq, index) => (
               <Accordion
@@ -666,12 +631,9 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      {/* Footer */}
       <Box className="bg-gray-900 text-white py-16">
         <Container maxWidth="lg">
-          {/* Replace Grid with CSS Grid */}
           <Box className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            {/* Left Column - Brand & Description */}
             <Box>
               <Box className="flex items-center gap-4 mb-6">
                 <Avatar className="bg-gradient-to-br from-blue-500 to-purple-600 w-12 h-12">
@@ -693,7 +655,6 @@ export default function HomePage() {
                 and 24/7 support.
               </Typography>
 
-              {/* Stats in Footer */}
               <Box className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-md">
                 {stats.map((stat, index) => (
                   <Box key={index} className="text-center">
@@ -711,7 +672,6 @@ export default function HomePage() {
               </Box>
             </Box>
 
-            {/* Right Column - Links */}
             <Box>
               <Box className="grid grid-cols-3 gap-12">
                 <Box>
@@ -788,7 +748,6 @@ export default function HomePage() {
 
           <Divider className="my-8 bg-gray-700" />
 
-          {/* Footer Bottom */}
           <Box className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <Typography className="text-gray-400 text-center sm:text-left">
               © {new Date().getFullYear()} UniBot - Wrocław University of
@@ -812,10 +771,8 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      {/* Floating ChatBot */}
       <ChatBot />
 
-      {/* Custom Styles */}
       <style jsx>{`
         @keyframes blob {
           0% {
