@@ -216,7 +216,7 @@ export default function HomePage() {
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg font-medium shadow-lg"
                   size={isMobile ? 'small' : 'medium'}
                 >
-                  Get Started
+                  Register
                 </Button>
               </Link>
             </Box>
