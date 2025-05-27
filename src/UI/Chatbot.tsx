@@ -61,7 +61,7 @@ const Chatbot = () => {
 
     // Initialize socket connection
     socketRef.current = io(
-      process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:8000',
+      process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000',
       {
         transports: ['websocket', 'polling'],
       },
@@ -216,10 +216,10 @@ const Chatbot = () => {
                 </div>
               </div>
               <button
-                onClick={()=> {
-                  setShowChat(false);
-                  setChatLog([]);
-                  return;
+                onClick={() => {
+                  setShowChat(false)
+                  setChatLog([])
+                  return
                 }}
                 className="text-white hover:bg-white/20 rounded-full p-1 transition-colors"
               >
