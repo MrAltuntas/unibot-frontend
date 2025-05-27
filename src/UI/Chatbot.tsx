@@ -190,19 +190,24 @@ const Chatbot = () => {
   }
 
   const renderMessage = (msg: ChatMessage, index: number) => {
-    let messageContent
+    let messageContent = msg.text
     let categories = null
 
-    // Try to parse JSON response for category suggestions
+    // Enhanced JSON parsing logic (keep existing logic)
     try {
       const parsed = JSON.parse(msg.text)
-      if (parsed.type === 'category_suggestions') {
+
+      if (parsed.text && typeof parsed.text === 'string') {
         messageContent = parsed.text
-        categories = parsed.categories
+
+        if (parsed.type === 'category_suggestions' && parsed.categories) {
+          categories = parsed.categories
+        }
       } else {
         messageContent = msg.text
       }
-    } catch {
+    } catch (parseError) {
+      // Existing JSON parsing fallback logic...
       messageContent = msg.text
     }
 
@@ -229,7 +234,6 @@ const Chatbot = () => {
               {msg.type === 'bot' ? (
                 <ReactMarkdown
                   components={{
-                    // Customize markdown rendering
                     h1: ({ children }) => (
                       <h1 className="text-lg font-bold mb-2">{children}</h1>
                     ),
@@ -270,6 +274,37 @@ const Chatbot = () => {
                         {children}
                       </code>
                     ),
+                    // Enhanced table rendering
+                    table: ({ children }) => (
+                      <div className="overflow-x-auto my-4">
+                        <table className="min-w-full border-collapse border border-gray-300 text-xs">
+                          {children}
+                        </table>
+                      </div>
+                    ),
+                    thead: ({ children }) => (
+                      <thead className="bg-gray-50">{children}</thead>
+                    ),
+                    tbody: ({ children }) => <tbody>{children}</tbody>,
+                    tr: ({ children }) => (
+                      <tr className="border-b border-gray-200">{children}</tr>
+                    ),
+                    th: ({ children }) => (
+                      <th className="border border-gray-300 px-2 py-1 text-left font-semibold text-gray-900">
+                        {children}
+                      </th>
+                    ),
+                    td: ({ children }) => (
+                      <td className="border border-gray-300 px-2 py-1 text-gray-700">
+                        {children}
+                      </td>
+                    ),
+                    // Handle code blocks
+                    pre: ({ children }) => (
+                      <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto my-2">
+                        {children}
+                      </pre>
+                    ),
                   }}
                 >
                   {messageContent}
@@ -290,26 +325,35 @@ const Chatbot = () => {
             </p>
           </div>
 
-          {/* Category Buttons */}
+          {/* Category Buttons - Only show if categories exist and are valid */}
           {categories && categories.length > 0 && (
             <div className="mt-3 space-y-2">
-              {categories.map((category: any) => (
-                <button
-                  key={category.id}
-                  onClick={() =>
-                    handleCategoryClick(category.id, category.title)
-                  }
-                  className="w-full text-left p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors duration-200 hover:shadow-md"
-                  disabled={selectedCategory === category.id}
-                >
-                  <div className="font-medium text-blue-800 text-sm">
-                    📋 {category.title}
-                  </div>
-                  <div className="text-blue-600 text-xs mt-1">
-                    {category.description}
-                  </div>
-                </button>
-              ))}
+              {categories
+                .filter(
+                  (category: any) =>
+                    category.title &&
+                    category.title !== 'HI HI' &&
+                    !category.title.match(/^[A-Z\s]+$/) &&
+                    category.description &&
+                    category.description.length > 10,
+                )
+                .map((category: any) => (
+                  <button
+                    key={category.id}
+                    onClick={() =>
+                      handleCategoryClick(category.id, category.title)
+                    }
+                    className="w-full text-left p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors duration-200 hover:shadow-md"
+                    disabled={selectedCategory === category.id}
+                  >
+                    <div className="font-medium text-blue-800 text-sm">
+                      📋 {category.title}
+                    </div>
+                    <div className="text-blue-600 text-xs mt-1">
+                      {category.description}
+                    </div>
+                  </button>
+                ))}
             </div>
           )}
         </div>
