@@ -1,10 +1,8 @@
 import type { Metadata } from 'next'
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter'
 import { Roboto } from 'next/font/google'
-import { ThemeProvider } from '@mui/material/styles'
-import CssBaseline from '@mui/material/CssBaseline'
 import { AuthProvider } from '@/context/AuthContext'
-import theme from '@/Style/theme'
+import { AppThemeProvider } from '@/context/ThemeContext'
 import '../Style/globals.css'
 
 const roboto = Roboto({
@@ -28,10 +26,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={roboto.className}>
         <AppRouterCacheProvider>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
+          <AppThemeProvider>
             <AuthProvider>{children}</AuthProvider>
-          </ThemeProvider>
+          </AppThemeProvider>
         </AppRouterCacheProvider>
       </body>
     </html>
