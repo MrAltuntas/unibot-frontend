@@ -9,7 +9,6 @@ import {
   Button,
   Card,
   CardContent,
-  Grid,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -238,14 +237,10 @@ export default function HomePage() {
         </Box>
 
         <Container maxWidth="lg" className="relative z-10 py-20">
-          <Grid
-            container
-            spacing={6}
-            alignItems="center"
-            className="min-h-[80vh]"
-          >
+          {/* Replace Grid with CSS Grid */}
+          <Box className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
             {/* Left Column - Text Content */}
-            <Grid item xs={12} lg={6}>
+            <Box>
               <Fade in={isVisible} timeout={1000}>
                 <Box className="text-center lg:text-left">
                   {/* Badge */}
@@ -320,37 +315,31 @@ export default function HomePage() {
                     </Button>
                   </Box>
 
-                  {/* Stats Grid */}
-                  <Grid
-                    container
-                    spacing={3}
-                    className="max-w-lg mx-auto lg:mx-0"
-                  >
+                  {/* Stats Grid - Replace with CSS Grid */}
+                  <Box className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-lg mx-auto lg:mx-0">
                     {stats.slice(0, isMobile ? 2 : 4).map((stat, index) => (
-                      <Grid item xs={6} sm={3} key={index}>
-                        <Box className="text-center lg:text-left">
-                          <Typography className="text-2xl mb-1">
-                            {stat.icon}
-                          </Typography>
-                          <Typography
-                            variant="h6"
-                            className="font-bold text-gray-900"
-                          >
-                            {stat.number}
-                          </Typography>
-                          <Typography variant="body2" className="text-gray-600">
-                            {stat.label}
-                          </Typography>
-                        </Box>
-                      </Grid>
+                      <Box key={index} className="text-center lg:text-left">
+                        <Typography className="text-2xl mb-1">
+                          {stat.icon}
+                        </Typography>
+                        <Typography
+                          variant="h6"
+                          className="font-bold text-gray-900"
+                        >
+                          {stat.number}
+                        </Typography>
+                        <Typography variant="body2" className="text-gray-600">
+                          {stat.label}
+                        </Typography>
+                      </Box>
                     ))}
-                  </Grid>
+                  </Box>
                 </Box>
               </Fade>
-            </Grid>
+            </Box>
 
             {/* Right Column - Bot Card */}
-            <Grid item xs={12} lg={6}>
+            <Box>
               <Slide direction="left" in={isVisible} timeout={1200}>
                 <Box className="flex justify-center lg:justify-end">
                   <Card className="bg-white/90 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden max-w-md w-full">
@@ -422,8 +411,8 @@ export default function HomePage() {
                   </Card>
                 </Box>
               </Slide>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Container>
       </Box>
 
@@ -453,42 +442,40 @@ export default function HomePage() {
             </Typography>
           </Box>
 
-          {/* Features Grid */}
-          <Grid container spacing={4}>
+          {/* Features Grid - Replace with CSS Grid */}
+          <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Grid item xs={12} sm={6} lg={4} key={index}>
-                <Zoom in={isVisible} timeout={1000 + index * 200}>
-                  <Card className="h-full bg-white hover:bg-gray-50 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 border-0 shadow-lg rounded-2xl overflow-hidden group">
-                    <CardContent className="p-6 text-center">
-                      {/* Icon */}
-                      <Box
-                        className="w-16 h-16 rounded-2xl mb-6 flex items-center justify-center text-2xl transition-all duration-300 group-hover:scale-110 mx-auto"
-                        sx={{
-                          backgroundColor: feature.bgColor,
-                          color: feature.color,
-                        }}
-                      >
-                        {feature.icon}
-                      </Box>
+              <Zoom key={index} in={isVisible} timeout={1000 + index * 200}>
+                <Card className="h-full bg-white hover:bg-gray-50 transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 border-0 shadow-lg rounded-2xl overflow-hidden group">
+                  <CardContent className="p-6 text-center">
+                    {/* Icon */}
+                    <Box
+                      className="w-16 h-16 rounded-2xl mb-6 flex items-center justify-center text-2xl transition-all duration-300 group-hover:scale-110 mx-auto"
+                      sx={{
+                        backgroundColor: feature.bgColor,
+                        color: feature.color,
+                      }}
+                    >
+                      {feature.icon}
+                    </Box>
 
-                      {/* Title */}
-                      <Typography
-                        variant="h6"
-                        className="font-bold text-gray-900 mb-3"
-                      >
-                        {feature.title}
-                      </Typography>
+                    {/* Title */}
+                    <Typography
+                      variant="h6"
+                      className="font-bold text-gray-900 mb-3"
+                    >
+                      {feature.title}
+                    </Typography>
 
-                      {/* Description */}
-                      <Typography className="text-gray-600 leading-relaxed">
-                        {feature.description}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Zoom>
-              </Grid>
+                    {/* Description */}
+                    <Typography className="text-gray-600 leading-relaxed">
+                      {feature.description}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Zoom>
             ))}
-          </Grid>
+          </Box>
         </Container>
       </Box>
 
@@ -682,9 +669,10 @@ export default function HomePage() {
       {/* Footer */}
       <Box className="bg-gray-900 text-white py-16">
         <Container maxWidth="lg">
-          <Grid container spacing={8}>
+          {/* Replace Grid with CSS Grid */}
+          <Box className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             {/* Left Column - Brand & Description */}
-            <Grid item xs={12} lg={6}>
+            <Box>
               <Box className="flex items-center gap-4 mb-6">
                 <Avatar className="bg-gradient-to-br from-blue-500 to-purple-600 w-12 h-12">
                   <BotIcon />
@@ -706,29 +694,27 @@ export default function HomePage() {
               </Typography>
 
               {/* Stats in Footer */}
-              <Grid container spacing={3} className="max-w-md">
+              <Box className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-md">
                 {stats.map((stat, index) => (
-                  <Grid item xs={6} sm={3} key={index}>
-                    <Box className="text-center">
-                      <Typography className="text-xl mb-1">
-                        {stat.icon}
-                      </Typography>
-                      <Typography className="font-bold text-white text-sm">
-                        {stat.number}
-                      </Typography>
-                      <Typography variant="caption" className="text-gray-400">
-                        {stat.label}
-                      </Typography>
-                    </Box>
-                  </Grid>
+                  <Box key={index} className="text-center">
+                    <Typography className="text-xl mb-1">
+                      {stat.icon}
+                    </Typography>
+                    <Typography className="font-bold text-white text-sm">
+                      {stat.number}
+                    </Typography>
+                    <Typography variant="caption" className="text-gray-400">
+                      {stat.label}
+                    </Typography>
+                  </Box>
                 ))}
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
 
             {/* Right Column - Links */}
-            <Grid item xs={12} lg={6}>
-              <Grid container spacing={6}>
-                <Grid item xs={4}>
+            <Box>
+              <Box className="grid grid-cols-3 gap-12">
+                <Box>
                   <Typography variant="h6" className="font-bold mb-4">
                     Product
                   </Typography>
@@ -752,9 +738,9 @@ export default function HomePage() {
                       Pricing
                     </Link>
                   </Box>
-                </Grid>
+                </Box>
 
-                <Grid item xs={4}>
+                <Box>
                   <Typography variant="h6" className="font-bold mb-4">
                     Support
                   </Typography>
@@ -769,9 +755,9 @@ export default function HomePage() {
                       University Expert
                     </Typography>
                   </Box>
-                </Grid>
+                </Box>
 
-                <Grid item xs={4}>
+                <Box>
                   <Typography variant="h6" className="font-bold mb-4">
                     Account
                   </Typography>
@@ -795,10 +781,10 @@ export default function HomePage() {
                       Dashboard
                     </Link>
                   </Box>
-                </Grid>
-              </Grid>
-            </Grid>
-          </Grid>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
 
           <Divider className="my-8 bg-gray-700" />
 
