@@ -6,6 +6,7 @@ import PersonIcon from '@mui/icons-material/Person'
 import CloseIcon from '@mui/icons-material/Close'
 import SendIcon from '@mui/icons-material/Send'
 import CircularProgress from '@mui/material/CircularProgress'
+import ReactMarkdown from 'react-markdown'
 
 interface ChatMessage {
   userId: string
@@ -16,6 +17,11 @@ interface ChatMessage {
   messageId: string
   botId?: string
   replyTo?: string
+  categories?: Array<{
+    id: string
+    title: string
+    description: string
+  }>
 }
 
 const Chatbot = () => {
@@ -26,6 +32,7 @@ const Chatbot = () => {
   const [isConnected, setIsConnected] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   const socketRef = useRef<Socket | null>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -155,6 +162,167 @@ const Chatbot = () => {
     }
   }
 
+  const handleCategoryClick = (categoryId: string, categoryTitle: string) => {
+    if (!socketRef.current || !isConnected) return
+
+    setSelectedCategory(categoryId)
+
+    // Send category selection to backend
+    socketRef.current.emit('category_selected', {
+      categoryId,
+      categoryTitle,
+      userId: userId.current,
+      username: username.current,
+    })
+
+    // Add user message to chat immediately for better UX
+    const userMessage: ChatMessage = {
+      userId: userId.current,
+      text: `Tell me about: ${categoryTitle}`,
+      username: username.current,
+      timestamp: Date.now(),
+      type: 'user',
+      messageId: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    }
+
+    setChatLog((prev) => [...prev, userMessage])
+    setIsBotTyping(true)
+  }
+
+  const renderMessage = (msg: ChatMessage, index: number) => {
+    let messageContent
+    let categories = null
+
+    // Try to parse JSON response for category suggestions
+    try {
+      const parsed = JSON.parse(msg.text)
+      if (parsed.type === 'category_suggestions') {
+        messageContent = parsed.text
+        categories = parsed.categories
+      } else {
+        messageContent = msg.text
+      }
+    } catch {
+      messageContent = msg.text
+    }
+
+    return (
+      <div
+        key={msg.messageId || index}
+        className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+      >
+        {msg.type === 'bot' && (
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+            <SmartToyIcon style={{ fontSize: '16px', color: 'white' }} />
+          </div>
+        )}
+
+        <div className="max-w-[80%]">
+          <div
+            className={`p-3 rounded-2xl ${
+              msg.type === 'user'
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-br-sm'
+                : 'bg-white border border-gray-200 rounded-bl-sm'
+            }`}
+          >
+            <div className="text-sm break-words">
+              {msg.type === 'bot' ? (
+                <ReactMarkdown
+                  components={{
+                    // Customize markdown rendering
+                    h1: ({ children }) => (
+                      <h1 className="text-lg font-bold mb-2">{children}</h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2 className="text-base font-bold mb-2">{children}</h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className="text-sm font-bold mb-1">{children}</h3>
+                    ),
+                    p: ({ children }) => (
+                      <p className="mb-2 last:mb-0">{children}</p>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="list-disc pl-4 mb-2">{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="list-decimal pl-4 mb-2">{children}</ol>
+                    ),
+                    li: ({ children }) => <li className="mb-1">{children}</li>,
+                    strong: ({ children }) => (
+                      <strong className="font-semibold">{children}</strong>
+                    ),
+                    em: ({ children }) => (
+                      <em className="italic">{children}</em>
+                    ),
+                    a: ({ href, children }) => (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline"
+                      >
+                        {children}
+                      </a>
+                    ),
+                    code: ({ children }) => (
+                      <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono">
+                        {children}
+                      </code>
+                    ),
+                  }}
+                >
+                  {messageContent}
+                </ReactMarkdown>
+              ) : (
+                <p className="whitespace-pre-wrap">{messageContent}</p>
+              )}
+            </div>
+            <p
+              className={`text-xs mt-1 ${
+                msg.type === 'user' ? 'text-white/70' : 'text-gray-500'
+              }`}
+            >
+              {new Date(msg.timestamp).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+          </div>
+
+          {/* Category Buttons */}
+          {categories && categories.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {categories.map((category: any) => (
+                <button
+                  key={category.id}
+                  onClick={() =>
+                    handleCategoryClick(category.id, category.title)
+                  }
+                  className="w-full text-left p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors duration-200 hover:shadow-md"
+                  disabled={selectedCategory === category.id}
+                >
+                  <div className="font-medium text-blue-800 text-sm">
+                    📋 {category.title}
+                  </div>
+                  <div className="text-blue-600 text-xs mt-1">
+                    {category.description}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {msg.type === 'user' && (
+          <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center ml-2 flex-shrink-0">
+            <PersonIcon style={{ fontSize: '16px', color: 'white' }} />
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <>
       {/* Typing dots animation */}
@@ -254,50 +422,7 @@ const Chatbot = () => {
                 </div>
               )}
 
-              {chatLog.map((msg, index) => (
-                <div
-                  key={msg.messageId || index}
-                  className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  {msg.type === 'bot' && (
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
-                      <SmartToyIcon
-                        style={{ fontSize: '16px', color: 'white' }}
-                      />
-                    </div>
-                  )}
-
-                  <div
-                    className={`max-w-[80%] p-3 rounded-2xl ${
-                      msg.type === 'user'
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-br-sm'
-                        : 'bg-white border border-gray-200 rounded-bl-sm'
-                    }`}
-                  >
-                    <p className="text-sm whitespace-pre-wrap break-words">
-                      {msg.text}
-                    </p>
-                    <p
-                      className={`text-xs mt-1 ${
-                        msg.type === 'user' ? 'text-white/70' : 'text-gray-500'
-                      }`}
-                    >
-                      {new Date(msg.timestamp).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
-
-                  {msg.type === 'user' && (
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center ml-2 flex-shrink-0">
-                      <PersonIcon
-                        style={{ fontSize: '16px', color: 'white' }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
+              {chatLog.map((msg, index) => renderMessage(msg, index))}
 
               {/* Bot typing indicator */}
               {isBotTyping && (

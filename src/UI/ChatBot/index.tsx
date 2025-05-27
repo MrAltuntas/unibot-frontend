@@ -7,16 +7,20 @@ import SendIcon from '@mui/icons-material/Send'
 
 // Define the structure for messages to align with Gemini's API
 interface ChatMessage {
-  role: 'user' | 'model'; // 'user' for user messages, 'model' for bot messages (Gemini's convention)
-  parts: Array<{ text: string }>; // Content of the message (Gemini's convention)
-  displaySender: 'user' | 'bot'; // Your existing property for UI rendering
+  role: 'user' | 'model' // 'user' for user messages, 'model' for bot messages (Gemini's convention)
+  parts: Array<{ text: string }> // Content of the message (Gemini's convention)
+  displaySender: 'user' | 'bot' // Your existing property for UI rendering
 }
 
 const Chatbot = () => {
   const [showChat, setShowChat] = useState(false)
   const [message, setMessage] = useState('')
   const [chatLog, setChatLog] = useState<ChatMessage[]>([
-    { role: 'model', parts: [{ text: 'Hello! How can I help you?' }], displaySender: 'bot' },
+    {
+      role: 'model',
+      parts: [{ text: 'Hello! How can I help you?' }],
+      displaySender: 'bot',
+    },
   ])
   const [isBotTyping, setIsBotTyping] = useState(false)
 
@@ -48,18 +52,18 @@ const Chatbot = () => {
         .filter((msg) => {
           // If the chatLog has only one message and it's the initial bot greeting,
           // then we should *not* send it as part of the history for the first user turn.
-          const isInitialBotGreeting = chatLog.length === 1 &&
+          const isInitialBotGreeting =
+            chatLog.length === 1 &&
             msg.role === 'model' &&
-            msg.parts[0].text === 'Hello! How can I help you?';
-          return !isInitialBotGreeting;
+            msg.parts[0].text === 'Hello! How can I help you?'
+          return !isInitialBotGreeting
         })
-        .map((msg) => ({ role: msg.role, parts: msg.parts }));
+        .map((msg) => ({ role: msg.role, parts: msg.parts }))
 
       // --- DEBUGGING: Log the history being sent ---
-      console.log("History being sent to Gemini API:", historyForGemini);
+      console.log('History being sent to Gemini API:', historyForGemini)
 
       // --- END CRITICAL FIX ---
-
 
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -85,14 +89,17 @@ const Chatbot = () => {
         displaySender: 'bot',
       }
       setChatLog((prev) => [...prev, botMsg])
-
     } catch (error) {
       console.error('Error communicating with Gemini API:', error)
       setChatLog((prev) => [
         ...prev,
         {
           role: 'model',
-          parts: [{ text: 'Sorry, I ran into an issue getting a response. Please try again.' }],
+          parts: [
+            {
+              text: 'Sorry, I ran into an issue getting a response. Please try again.',
+            },
+          ],
           displaySender: 'bot',
         },
       ])
@@ -103,7 +110,7 @@ const Chatbot = () => {
 
   return (
     <>
-      {/* Typing dots animation - NO CHANGES HERE */}
+      {/* Typing dots animation */}
       <style jsx>{`
         @keyframes typingDots {
           0% {
@@ -119,10 +126,11 @@ const Chatbot = () => {
             content: 'Typing.';
           }
         }
+
         .typing-dots::after {
           display: inline-block;
-          content: '.';
-          animation: typingDots 1s steps(3, end) infinite;
+          content: 'Typing.';
+          animation: typingDots 1.5s steps(3, end) infinite;
         }
       `}</style>
 
@@ -131,7 +139,7 @@ const Chatbot = () => {
         onClick={() => setShowChat(!showChat)}
         className="fixed right-24 bottom-[1rem] w-12 h-12 flex items-center justify-center shadow-lg shadow-black hover:cursor-pointer bg-white rounded-full"
       >
-        <SmartToyIcon style={{ fontSize: '36px'}} />
+        <SmartToyIcon style={{ fontSize: '36px' }} />
       </div>
 
       {showChat && (
@@ -205,13 +213,12 @@ const Chatbot = () => {
                 className="border border-gray-300 rounded-lg py-2 px-4 w-full text-gray-800"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !isBotTyping && handleSendMessage()}
+                onKeyDown={(e) =>
+                  e.key === 'Enter' && !isBotTyping && handleSendMessage()
+                }
                 disabled={isBotTyping}
               />
-              <button
-                onClick={handleSendMessage}
-                disabled={isBotTyping}
-              >
+              <button onClick={handleSendMessage} disabled={isBotTyping}>
                 <SendIcon className="text-black" />
               </button>
             </div>
