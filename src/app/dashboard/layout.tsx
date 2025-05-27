@@ -709,7 +709,10 @@ export default function DashboardLayout({
   )
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box
+      sx={{ display: 'flex', minHeight: '100vh' }}
+      className={darkMode ? 'dashboard-dark' : 'dashboard-light'}
+    >
       <CssBaseline />
 
       {/* Top App Bar */}

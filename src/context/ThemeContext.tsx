@@ -20,10 +20,7 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Only apply dark mode to dashboard pages
   const isDashboardPage = pathname?.startsWith('/dashboard')
-
-  // Force light mode for all non-dashboard pages
-  const actualThemeMode =
-    isDashboardPage && dashboardDarkMode ? 'dark' : 'light'
+  const shouldUseDarkMode = isDashboardPage && dashboardDarkMode
 
   useEffect(() => {
     // Load dashboard dark mode preference from localStorage
@@ -42,14 +39,15 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }
 
-  const theme = createAppTheme(actualThemeMode)
+  // Create theme with proper isolation
+  const theme = createAppTheme(
+    shouldUseDarkMode ? 'dark' : 'light',
+    isDashboardPage,
+  )
 
   return (
     <ThemeContext.Provider
-      value={{
-        darkMode: isDashboardPage ? dashboardDarkMode : false,
-        toggleDarkMode,
-      }}
+      value={{ darkMode: shouldUseDarkMode, toggleDarkMode }}
     >
       <ThemeProvider theme={theme}>
         <CssBaseline />

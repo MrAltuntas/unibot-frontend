@@ -2,7 +2,10 @@
 import { createTheme } from '@mui/material/styles'
 import GlobalColors from './GlobalColors'
 
-const createAppTheme = (mode: 'light' | 'dark') =>
+const createAppTheme = (
+  mode: 'light' | 'dark',
+  isDashboardPage: boolean = false,
+) =>
   createTheme({
     cssVariables: true,
     palette: {
@@ -44,24 +47,54 @@ const createAppTheme = (mode: 'light' | 'dark') =>
         contrastText: GlobalColors.common.white,
       },
       background: {
-        default: mode === 'dark' ? '#0f172a' : '#f9fafb',
-        paper: mode === 'dark' ? '#1e293b' : '#ffffff',
+        default: mode === 'dark' && isDashboardPage ? '#0f172a' : '#f9fafb',
+        paper: mode === 'dark' && isDashboardPage ? '#1e293b' : '#ffffff',
       },
       text: {
-        primary: mode === 'dark' ? '#f1f5f9' : '#111827',
-        secondary: mode === 'dark' ? '#94a3b8' : '#6b7280',
+        primary: mode === 'dark' && isDashboardPage ? '#f1f5f9' : '#111827',
+        secondary: mode === 'dark' && isDashboardPage ? '#94a3b8' : '#6b7280',
       },
       grey: {
-        50: mode === 'dark' ? '#1e293b' : GlobalColors.gray[50],
-        100: mode === 'dark' ? '#334155' : GlobalColors.gray[100],
-        200: mode === 'dark' ? '#475569' : GlobalColors.gray[200],
-        300: mode === 'dark' ? '#64748b' : GlobalColors.gray[300],
-        400: mode === 'dark' ? '#94a3b8' : GlobalColors.gray[400],
-        500: mode === 'dark' ? '#cbd5e1' : GlobalColors.gray[500],
-        600: mode === 'dark' ? '#e2e8f0' : GlobalColors.gray[600],
-        700: mode === 'dark' ? '#f1f5f9' : GlobalColors.gray[700],
-        800: mode === 'dark' ? '#f8fafc' : GlobalColors.gray[800],
-        900: mode === 'dark' ? '#ffffff' : GlobalColors.gray[900],
+        50:
+          mode === 'dark' && isDashboardPage
+            ? '#1e293b'
+            : GlobalColors.gray[50],
+        100:
+          mode === 'dark' && isDashboardPage
+            ? '#334155'
+            : GlobalColors.gray[100],
+        200:
+          mode === 'dark' && isDashboardPage
+            ? '#475569'
+            : GlobalColors.gray[200],
+        300:
+          mode === 'dark' && isDashboardPage
+            ? '#64748b'
+            : GlobalColors.gray[300],
+        400:
+          mode === 'dark' && isDashboardPage
+            ? '#94a3b8'
+            : GlobalColors.gray[400],
+        500:
+          mode === 'dark' && isDashboardPage
+            ? '#cbd5e1'
+            : GlobalColors.gray[500],
+        600:
+          mode === 'dark' && isDashboardPage
+            ? '#e2e8f0'
+            : GlobalColors.gray[600],
+        700:
+          mode === 'dark' && isDashboardPage
+            ? '#f1f5f9'
+            : GlobalColors.gray[700],
+        800:
+          mode === 'dark' && isDashboardPage
+            ? '#f8fafc'
+            : GlobalColors.gray[800],
+        900:
+          mode === 'dark' && isDashboardPage
+            ? '#ffffff'
+            : GlobalColors.gray[900],
         A100: GlobalColors.gray[100],
         A200: GlobalColors.gray[200],
         A400: GlobalColors.gray[400],
@@ -69,77 +102,91 @@ const createAppTheme = (mode: 'light' | 'dark') =>
       },
     },
     typography: {
-      fontFamily: 'var(--font-roboto)',
-      h1: { fontFamily: 'var(--font-roboto)' },
-      h2: { fontFamily: 'var(--font-roboto)' },
-      h3: { fontFamily: 'var(--font-roboto)' },
-      h4: { fontFamily: 'var(--font-roboto)' },
-      h5: { fontFamily: 'var(--font-roboto)' },
-      h6: { fontFamily: 'var(--font-roboto)' },
-      subtitle1: { fontFamily: 'var(--font-roboto)' },
-      subtitle2: { fontFamily: 'var(--font-roboto)' },
-      body1: { fontFamily: 'var(--font-roboto)' },
-      body2: { fontFamily: 'var(--font-roboto)' },
-      button: { fontFamily: 'var(--font-roboto)' },
-      caption: { fontFamily: 'var(--font-roboto)' },
-      overline: { fontFamily: 'var(--font-roboto)' },
+      fontFamily: [
+        '-apple-system',
+        'BlinkMacSystemFont',
+        '"Segoe UI"',
+        'Roboto',
+        '"Helvetica Neue"',
+        'Arial',
+        'sans-serif',
+      ].join(','),
     },
     components: {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            backgroundColor: mode === 'dark' ? '#0f172a' : '#f9fafb',
-            color: mode === 'dark' ? '#f1f5f9' : '#111827',
+            backgroundColor:
+              mode === 'dark' && isDashboardPage ? '#0f172a' : '#f9fafb',
+            color: mode === 'dark' && isDashboardPage ? '#f1f5f9' : '#111827',
           },
         },
       },
       MuiAppBar: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'dark' ? '#1e293b' : '#ffffff',
-            color: mode === 'dark' ? '#f1f5f9' : '#111827',
-            borderBottom: `1px solid ${mode === 'dark' ? '#334155' : '#e5e7eb'}`,
+            backgroundColor:
+              mode === 'dark' && isDashboardPage ? '#1e293b' : '#ffffff',
+            color: mode === 'dark' && isDashboardPage ? '#f1f5f9' : '#111827',
+            borderBottom: `1px solid ${mode === 'dark' && isDashboardPage ? '#334155' : '#e5e7eb'}`,
           },
         },
       },
       MuiDrawer: {
         styleOverrides: {
           paper: {
-            backgroundColor: mode === 'dark' ? '#0f172a' : '#1e293b',
-            borderRight: `1px solid ${mode === 'dark' ? '#334155' : 'transparent'}`,
+            backgroundColor: '#1e293b', // Always dark for sidebar
+            borderRight: 'none',
           },
         },
       },
       MuiCard: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'dark' ? '#1e293b' : '#ffffff',
+            backgroundColor:
+              mode === 'dark' && isDashboardPage ? '#1e293b' : '#ffffff',
             borderRadius: '8px',
             boxShadow:
-              mode === 'dark'
+              mode === 'dark' && isDashboardPage
                 ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
                 : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-            border: mode === 'dark' ? '1px solid #334155' : 'none',
+            border:
+              mode === 'dark' && isDashboardPage ? '1px solid #334155' : 'none',
           },
         },
       },
       MuiPaper: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'dark' ? '#1e293b' : '#ffffff',
+            backgroundColor:
+              mode === 'dark' && isDashboardPage ? '#1e293b' : '#ffffff',
             borderRadius: '8px',
-            border: mode === 'dark' ? '1px solid #334155' : 'none',
+            border:
+              mode === 'dark' && isDashboardPage ? '1px solid #334155' : 'none',
           },
         },
       },
       MuiTextField: {
         styleOverrides: {
           root: {
-            // Only apply dark styles for dashboard pages
-            '&.dashboard-textfield': {
+            // Dashboard-specific styling
+            ...(isDashboardPage && {
               '& .MuiInputBase-input': {
                 paddingLeft: '15px',
                 color: mode === 'dark' ? '#f1f5f9' : '#111827',
+                '&:-webkit-autofill': {
+                  WebkitBoxShadow: `0 0 0 1000px ${mode === 'dark' ? '#334155' : '#ffffff'} inset`,
+                  WebkitTextFillColor: mode === 'dark' ? '#f1f5f9' : '#111827',
+                  transition: 'background-color 5000s ease-in-out 0s',
+                },
+                '&:-webkit-autofill:hover': {
+                  WebkitBoxShadow: `0 0 0 1000px ${mode === 'dark' ? '#334155' : '#ffffff'} inset`,
+                  WebkitTextFillColor: mode === 'dark' ? '#f1f5f9' : '#111827',
+                },
+                '&:-webkit-autofill:focus': {
+                  WebkitBoxShadow: `0 0 0 1000px ${mode === 'dark' ? '#334155' : '#ffffff'} inset`,
+                  WebkitTextFillColor: mode === 'dark' ? '#f1f5f9' : '#111827',
+                },
               },
               '& .MuiInputLabel-root': {
                 color: mode === 'dark' ? '#94a3b8' : '#6b7280',
@@ -156,12 +203,26 @@ const createAppTheme = (mode: 'light' | 'dark') =>
                   borderColor: GlobalColors.primary[500],
                 },
               },
-            },
-            // Default light styling for all other TextFields (auth pages)
-            '&:not(.dashboard-textfield)': {
+            }),
+            // Auth pages styling (always light)
+            ...(!isDashboardPage && {
               '& .MuiInputBase-input': {
                 paddingLeft: '15px',
                 color: '#111827',
+                backgroundColor: '#ffffff',
+                '&:-webkit-autofill': {
+                  WebkitBoxShadow: '0 0 0 1000px #ffffff inset',
+                  WebkitTextFillColor: '#111827',
+                  transition: 'background-color 5000s ease-in-out 0s',
+                },
+                '&:-webkit-autofill:hover': {
+                  WebkitBoxShadow: '0 0 0 1000px #ffffff inset',
+                  WebkitTextFillColor: '#111827',
+                },
+                '&:-webkit-autofill:focus': {
+                  WebkitBoxShadow: '0 0 0 1000px #ffffff inset',
+                  WebkitTextFillColor: '#111827',
+                },
               },
               '& .MuiInputLabel-root': {
                 color: '#6b7280',
@@ -178,7 +239,7 @@ const createAppTheme = (mode: 'light' | 'dark') =>
                   borderColor: GlobalColors.primary[500],
                 },
               },
-            },
+            }),
           },
         },
       },
@@ -190,12 +251,20 @@ const createAppTheme = (mode: 'light' | 'dark') =>
             fontWeight: 500,
             padding: '8px 16px',
           },
+          contained: {
+            boxShadow: '0 2px 4px 0 rgb(0 0 0 / 0.1)',
+            '&:hover': {
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            },
+          },
           outlined: {
-            borderColor: mode === 'dark' ? '#475569' : '#d1d5db',
-            color: mode === 'dark' ? '#f1f5f9' : '#374151',
+            borderColor:
+              mode === 'dark' && isDashboardPage ? '#475569' : '#d1d5db',
+            color: mode === 'dark' && isDashboardPage ? '#f1f5f9' : '#374151',
             '&:hover': {
               borderColor: GlobalColors.primary[500],
-              backgroundColor: mode === 'dark' ? '#334155' : '#f3f4f6',
+              backgroundColor:
+                mode === 'dark' && isDashboardPage ? '#334155' : '#f3f4f6',
             },
           },
         },
@@ -203,17 +272,19 @@ const createAppTheme = (mode: 'light' | 'dark') =>
       MuiMenu: {
         styleOverrides: {
           paper: {
-            backgroundColor: mode === 'dark' ? '#1e293b' : '#ffffff',
-            border: `1px solid ${mode === 'dark' ? '#334155' : '#e5e7eb'}`,
+            backgroundColor:
+              mode === 'dark' && isDashboardPage ? '#1e293b' : '#ffffff',
+            border: `1px solid ${mode === 'dark' && isDashboardPage ? '#334155' : '#e5e7eb'}`,
           },
         },
       },
       MuiMenuItem: {
         styleOverrides: {
           root: {
-            color: mode === 'dark' ? '#f1f5f9' : '#374151',
+            color: mode === 'dark' && isDashboardPage ? '#f1f5f9' : '#374151',
             '&:hover': {
-              backgroundColor: mode === 'dark' ? '#334155' : '#f9fafb',
+              backgroundColor:
+                mode === 'dark' && isDashboardPage ? '#334155' : '#f9fafb',
             },
           },
         },
@@ -221,7 +292,7 @@ const createAppTheme = (mode: 'light' | 'dark') =>
       MuiListItem: {
         styleOverrides: {
           root: {
-            color: mode === 'dark' ? '#f1f5f9' : '#e2e8f0',
+            color: '#e2e8f0', // Always light for sidebar
           },
         },
       },

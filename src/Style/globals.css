@@ -121,3 +121,44 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   /* Remove background to let MUI theme handle it */
 }
+
+/* Autofill fixes for all browsers */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  transition: background-color 5000s ease-in-out 0s !important;
+  -webkit-transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Auth pages autofill (always light) */
+.auth-page input:-webkit-autofill,
+.auth-page input:-webkit-autofill:hover,
+.auth-page input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  background-color: #ffffff !important;
+}
+
+/* Dashboard autofill (light mode) */
+.dashboard-light input:-webkit-autofill,
+.dashboard-light input:-webkit-autofill:hover,
+.dashboard-light input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  background-color: #ffffff !important;
+}
+
+/* Dashboard autofill (dark mode) */
+.dashboard-dark input:-webkit-autofill,
+.dashboard-dark input:-webkit-autofill:hover,
+.dashboard-dark input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #334155 inset !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+  background-color: #334155 !important;
+}
+
+/* Firefox autofill */
+input:-moz-autofill {
+  background-color: transparent !important;
+}
