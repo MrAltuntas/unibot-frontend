@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true) // Start with loading true
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -53,7 +53,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Redirect to login
       router.push('/login')
     } catch (error) {
-      console.error('Logout error:', error)
       // Force redirect even if there's an error
       router.push('/login')
     }
@@ -66,10 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const hasRefreshToken = hasCookie('refreshToken')
     const hasAccessToken = hasCookie('accessToken')
 
-    console.log('🔍 Auth check:', { hasRefreshToken, hasAccessToken, pathname })
-
     if (!hasRefreshToken) {
-      console.log('❌ No refresh token found')
       setUser(null)
       setIsLoading(false)
 
@@ -83,11 +79,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       // First, try to verify the access token if it exists
       if (hasAccessToken) {
-        console.log('🔐 Checking access token...')
         const authResponse = await checkAccessToken({})
 
         if (!authResponse.error && authResponse.data?.user) {
-          console.log('✅ Access token valid, user authenticated')
           const userData = {
             ...authResponse.data.user,
             id: authResponse.data.user._id,
@@ -98,13 +92,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           return
         }
 
-        console.log('⚠️ Access token invalid, trying refresh...')
         // Access token is invalid, remove it
         deleteCookie('accessToken')
       }
 
       // Try to refresh the token
-      console.log('🔄 Attempting token refresh...')
       const refreshResponse = await refreshTokenApi({})
 
       if (
@@ -112,7 +104,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         refreshResponse.data?.user &&
         refreshResponse.data?.accessToken
       ) {
-        console.log('✅ Token refresh successful')
         const userData = {
           ...refreshResponse.data.user,
           id: refreshResponse.data.user._id,
@@ -125,7 +116,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Both access token check and refresh failed
-      console.log('❌ Token refresh failed, clearing auth state')
       setUser(null)
       deleteCookie('accessToken')
       deleteCookie('refreshToken')
@@ -136,7 +126,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         router.push('/login?message=Session expired, please log in again')
       }
     } catch (error) {
-      console.error('❌ Auth check error:', error)
       setUser(null)
       setIsLoading(false)
 
