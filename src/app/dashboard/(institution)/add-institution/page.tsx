@@ -5,8 +5,8 @@ import {
   Button,
   Typography,
   Paper,
-  Alert,
   InputAdornment,
+  Box,
 } from '@mui/material'
 import SchoolIcon from '@mui/icons-material/School'
 import DescriptionIcon from '@mui/icons-material/Description'
@@ -34,6 +34,7 @@ const initialValues: TAddInstitutionForm = {
 
 const AddInstitution = () => {
   const router = useRouter()
+
   const {
     control,
     handleSubmit,
@@ -54,23 +55,48 @@ const AddInstitution = () => {
       router.push('/dashboard/institutions')
     }
   }
-
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-      <Paper className="w-full max-w-md p-8 shadow-lg rounded-lg">
-        <div className="text-center mb-8">
-          <Typography variant="h4" className="text-primary-700 font-bold mb-2">
+    <Box
+      sx={{
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+        py: 6,
+        px: { xs: 2, sm: 3, lg: 4 },
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Paper
+        sx={{
+          width: '100%',
+          maxWidth: 400,
+          p: 4,
+          borderRadius: 2,
+        }}
+      >
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              color: 'primary.main',
+              fontWeight: 'bold',
+              mb: 1,
+            }}
+          >
             Add Category
           </Typography>
-          <Typography variant="body2" className="text-gray-600">
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             Create a new category for chatbot
           </Typography>
-        </div>
+        </Box>
 
-        <form
+        <Box
+          component="form"
           onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-y-6"
+          sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
         >
+          {' '}
           <Controller
             name="title"
             control={control}
@@ -89,18 +115,16 @@ const AddInstitution = () => {
                 fullWidth
                 error={!!errors.title}
                 helperText={errors.title?.message}
-                className="bg-white"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SchoolIcon className="text-gray-500" />
+                      <SchoolIcon color="action" />
                     </InputAdornment>
                   ),
                 }}
               />
             )}
           />
-
           <Controller
             name="description"
             control={control}
@@ -121,18 +145,16 @@ const AddInstitution = () => {
                 rows={4}
                 error={!!errors.description}
                 helperText={errors.description?.message}
-                className="bg-white"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <DescriptionIcon className="text-gray-500" />
+                      <DescriptionIcon color="action" />
                     </InputAdornment>
                   ),
                 }}
               />
             )}
           />
-
           <Controller
             name="systemPrompt"
             control={control}
@@ -153,18 +175,16 @@ const AddInstitution = () => {
                 rows={6}
                 error={!!errors.systemPrompt}
                 helperText={errors.systemPrompt?.message}
-                className="bg-white"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SmartToyIcon className="text-gray-500" />
+                      <SmartToyIcon color="action" />
                     </InputAdornment>
                   ),
                 }}
               />
             )}
           />
-
           <Controller
             name="data"
             control={control}
@@ -185,19 +205,17 @@ const AddInstitution = () => {
                 rows={5}
                 error={!!errors.data}
                 helperText={errors.data?.message}
-                className="bg-white"
                 placeholder="Enter additional category data or content..."
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <DataObjectIcon className="text-gray-500" />
+                      <DataObjectIcon color="action" />
                     </InputAdornment>
                   ),
                 }}
               />
             )}
           />
-
           <Controller
             name="url"
             control={control}
@@ -217,19 +235,17 @@ const AddInstitution = () => {
                 fullWidth
                 error={!!errors.url}
                 helperText={errors.url?.message}
-                className="bg-white"
                 placeholder="https://example.com"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <LanguageIcon className="text-gray-500" />
+                      <LanguageIcon color="action" />
                     </InputAdornment>
                   ),
                 }}
               />
             )}
-          />
-
+          />{' '}
           <Button
             type="submit"
             variant="contained"
@@ -237,13 +253,19 @@ const AddInstitution = () => {
             fullWidth
             size="large"
             disabled={institutionsLoading}
-            className="bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-md shadow-md hover:shadow-lg transition-all duration-200"
+            sx={{
+              py: 1.5,
+              mt: 2,
+              fontWeight: 'bold',
+              textTransform: 'none',
+              fontSize: '1rem',
+            }}
           >
             {institutionsLoading ? 'Adding Institution...' : 'Add Institution'}
           </Button>
-        </form>
+        </Box>
       </Paper>
-    </div>
+    </Box>
   )
 }
 

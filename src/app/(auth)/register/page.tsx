@@ -12,11 +12,8 @@ import {
   Checkbox,
   Divider,
   FormHelperText,
-  Box,
   Card,
   CardContent,
-  Fade,
-  Slide,
   Avatar,
   Chip,
   LinearProgress,
@@ -119,7 +116,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="auth-page min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       {/* Animated Background Blobs */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-pulse" />

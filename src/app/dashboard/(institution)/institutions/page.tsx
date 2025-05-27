@@ -20,6 +20,8 @@ import {
   Alert,
   Menu,
   MenuItem,
+  Box,
+  useTheme,
 } from '@mui/material'
 import {
   Edit as EditIcon,
@@ -46,6 +48,7 @@ const Institutions = () => {
   const [menuInstitution, setMenuInstitution] = useState<any>(null)
 
   const router = useRouter()
+  const theme = useTheme()
 
   const [getInstitutions, institutionsLoading] = useMutateApi({
     apiPath: `/category/get-Categories`,
@@ -141,86 +144,149 @@ const Institutions = () => {
   }, [])
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <Typography variant="h4" className="text-gray-800 font-bold mb-2">
+    <Box sx={{ p: 3 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 4,
+        }}
+      >
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{
+              color: 'text.primary',
+              fontWeight: 'bold',
+              mb: 1,
+            }}
+          >
             Institution Categories
           </Typography>
-          <Typography variant="body1" className="text-gray-600">
+          <Typography variant="body1" sx={{ color: 'text.secondary' }}>
             Manage your UniBot institution categories and configurations
           </Typography>
-        </div>
+        </Box>
         <Link href={'/dashboard/add-institution'}>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            className="bg-primary-600 hover:bg-primary-700 shadow-md"
+            sx={{
+              bgcolor: 'primary.main',
+              '&:hover': { bgcolor: 'primary.dark' },
+              boxShadow: theme.shadows[4],
+            }}
           >
             Add Category
           </Button>
         </Link>
-      </div>
+      </Box>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="shadow-sm border-l-4 border-primary-500">
-          <CardContent className="p-4">
-            <Typography variant="h6" className="text-primary-600 font-bold">
-              {institutions.length}
-            </Typography>
-            <Typography variant="body2" className="text-gray-600">
-              Total Categories
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border-l-4 border-success-500">
-          <CardContent className="p-4">
-            <Typography variant="h6" className="text-success-600 font-bold">
-              {institutions.filter((inst) => inst.status === 'active').length ||
-                institutions.length}
-            </Typography>
-            <Typography variant="body2" className="text-gray-600">
-              Active Categories
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border-l-4 border-info-500">
-          <CardContent className="p-4">
-            <Typography variant="h6" className="text-info-600 font-bold">
-              {institutions.reduce(
-                (acc, inst) => acc + (inst.systemPrompt?.length || 0),
-                0,
-              )}
-            </Typography>
-            <Typography variant="body2" className="text-gray-600">
-              Total Prompt Characters
-            </Typography>
-          </CardContent>
-        </Card>
-      </div>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card
+            sx={{
+              borderLeft: 4,
+              borderLeftColor: 'primary.main',
+              bgcolor: 'background.paper',
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Typography
+                variant="h6"
+                sx={{ color: 'primary.main', fontWeight: 'bold' }}
+              >
+                {institutions.length}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Total Categories
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card
+            sx={{
+              borderLeft: 4,
+              borderLeftColor: 'success.main',
+              bgcolor: 'background.paper',
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Typography
+                variant="h6"
+                sx={{ color: 'success.main', fontWeight: 'bold' }}
+              >
+                {institutions.filter((inst) => inst.status === 'active')
+                  .length || institutions.length}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Active Categories
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card
+            sx={{
+              borderLeft: 4,
+              borderLeftColor: 'info.main',
+              bgcolor: 'background.paper',
+            }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Typography
+                variant="h6"
+                sx={{ color: 'info.main', fontWeight: 'bold' }}
+              >
+                {institutions.reduce(
+                  (acc, inst) => acc + (inst.systemPrompt?.length || 0),
+                  0,
+                )}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                Total Prompt Characters
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       {institutionsLoading && (
-        <div className="flex justify-center items-center h-64">
-          <Typography variant="body1" className="text-gray-500">
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: 256,
+          }}
+        >
+          <Typography variant="body1" sx={{ color: 'text.secondary' }}>
             Loading categories...
           </Typography>
-        </div>
+        </Box>
       )}
 
       {!institutionsLoading && institutions.length === 0 && (
-        <Card className="shadow-sm">
-          <CardContent className="text-center py-12">
-            <Typography variant="h6" className="text-gray-600 mb-2">
+        <Card sx={{ bgcolor: 'background.paper' }}>
+          <CardContent sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h6" sx={{ color: 'text.secondary', mb: 2 }}>
               No categories found
             </Typography>
-            <Typography variant="body2" className="text-gray-500 mb-4">
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 4 }}>
               Create your first institution category to get started
             </Typography>
             <Link href={'/dashboard/add-institution'}>
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
-                className="bg-primary-600 hover:bg-primary-700"
+                sx={{
+                  bgcolor: 'primary.main',
+                  '&:hover': { bgcolor: 'primary.dark' },
+                }}
               >
                 Add Your First Category
               </Button>
@@ -232,61 +298,148 @@ const Institutions = () => {
       <Grid container spacing={3}>
         {institutions.map((institution) => (
           <Grid size={{ xs: 12, md: 6, lg: 4 }} key={institution._id}>
-            <Card className="h-full flex flex-col shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200">
-              <CardContent className="flex-grow p-6">
-                <div className="flex items-start justify-between mb-4">
+            <Card
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                bgcolor: 'background.paper',
+                border: 1,
+                borderColor: 'divider',
+                transition: 'box-shadow 0.3s',
+                '&:hover': {
+                  boxShadow: theme.shadows[8],
+                },
+              }}
+            >
+              <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    mb: 2,
+                  }}
+                >
                   <Typography
                     variant="h6"
-                    className="font-bold text-gray-800 line-clamp-2 flex-1"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'text.primary',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      flexGrow: 1,
+                    }}
                   >
                     {institution.title}
                   </Typography>
-                  <div className="flex items-center gap-1">
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      ml: 2,
+                    }}
+                  >
                     <Chip
                       label="Active"
                       size="small"
-                      className="bg-success-100 text-success-800"
+                      sx={{
+                        bgcolor: 'success.light',
+                        color: 'success.contrastText',
+                      }}
                     />
                     <IconButton
                       size="small"
                       onClick={(e) => handleMenuOpen(e, institution)}
-                      className="text-gray-500 hover:text-gray-700"
+                      sx={{
+                        color: 'text.secondary',
+                        '&:hover': { color: 'text.primary' },
+                      }}
                     >
                       <MoreVertIcon />
                     </IconButton>
-                  </div>
-                </div>
+                  </Box>
+                </Box>
 
                 <Typography
                   variant="body2"
-                  className="text-gray-600 mb-4 line-clamp-3"
+                  sx={{
+                    color: 'text.secondary',
+                    mb: 3,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
                 >
                   {institution.description}
                 </Typography>
 
-                <div className="space-y-3">
-                  <div className="p-3 bg-gray-50 rounded-lg">
+                <Box sx={{ space: 3 }}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      bgcolor: 'action.hover',
+                      borderRadius: 1,
+                      mb: 2,
+                    }}
+                  >
                     <Typography
                       variant="caption"
-                      className="text-gray-500 font-medium"
+                      sx={{
+                        color: 'text.secondary',
+                        fontWeight: 'medium',
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.5,
+                      }}
                     >
-                      SYSTEM PROMPT
+                      System Prompt
                     </Typography>
                     <Typography
                       variant="body2"
-                      className="text-gray-700 mt-1 line-clamp-2"
+                      sx={{
+                        color: 'text.primary',
+                        mt: 0.5,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
                     >
                       {institution.systemPrompt}
                     </Typography>
-                  </div>
+                  </Box>
 
-                  <div className="flex items-center gap-2">
-                    <Typography variant="caption" className="text-gray-500">
-                      WEBSITE:
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: 'text.secondary',
+                        textTransform: 'uppercase',
+                        fontWeight: 'medium',
+                      }}
+                    >
+                      Website:
                     </Typography>
                     <Typography
                       variant="body2"
-                      className="text-primary-600 hover:text-primary-800 cursor-pointer truncate"
+                      sx={{
+                        color: 'primary.main',
+                        cursor: 'pointer',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        '&:hover': { color: 'primary.dark' },
+                      }}
                       onClick={() =>
                         window.open(
                           institution.url.startsWith('http')
@@ -298,11 +451,19 @@ const Institutions = () => {
                     >
                       {institution.url}
                     </Typography>
-                  </div>
-                </div>
+                  </Box>
+                </Box>
               </CardContent>
 
-              <CardActions className="p-4 pt-0 flex justify-between bg-gray-50">
+              <CardActions
+                sx={{
+                  p: 3,
+                  pt: 0,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  bgcolor: 'action.hover',
+                }}
+              >
                 <Button
                   variant="contained"
                   size="small"
@@ -315,7 +476,10 @@ const Institutions = () => {
                       '_blank',
                     )
                   }
-                  className="bg-primary-600 hover:bg-primary-700"
+                  sx={{
+                    bgcolor: 'primary.main',
+                    '&:hover': { bgcolor: 'primary.dark' },
+                  }}
                 >
                   Visit
                 </Button>
@@ -331,18 +495,32 @@ const Institutions = () => {
         onClose={handleMenuClose}
         PaperProps={{
           elevation: 3,
-          sx: { minWidth: 140 },
+          sx: {
+            minWidth: 140,
+            bgcolor: 'background.paper',
+            border: 1,
+            borderColor: 'divider',
+          },
         }}
       >
-        <MenuItem onClick={() => handleEditClick(menuInstitution)}>
-          <EditIcon fontSize="small" className="mr-2" />
+        <MenuItem
+          onClick={() => handleEditClick(menuInstitution)}
+          sx={{
+            color: 'text.primary',
+            '&:hover': { bgcolor: 'action.hover' },
+          }}
+        >
+          <EditIcon fontSize="small" sx={{ mr: 2 }} />
           Edit
         </MenuItem>
         <MenuItem
           onClick={() => handleDeleteClick(menuInstitution)}
-          className="text-error-600"
+          sx={{
+            color: 'error.main',
+            '&:hover': { bgcolor: 'action.hover' },
+          }}
         >
-          <DeleteIcon fontSize="small" className="mr-2" />
+          <DeleteIcon fontSize="small" sx={{ mr: 2 }} />
           Delete
         </MenuItem>
       </Menu>
@@ -352,19 +530,24 @@ const Institutions = () => {
         onClose={() => setDeleteDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: 'background.paper',
+          },
+        }}
       >
-        <DialogTitle className="text-error-700">Delete Category</DialogTitle>
+        <DialogTitle sx={{ color: 'error.main' }}>Delete Category</DialogTitle>
         <DialogContent>
-          <DialogContentText>
+          <DialogContentText sx={{ color: 'text.secondary' }}>
             Are you sure you want to delete &ldquo;{selectedInstitution?.title}
             &rdquo;? This action cannot be undone and will permanently remove
             the category and its associated configuration.
           </DialogContentText>
         </DialogContent>
-        <DialogActions className="p-4">
+        <DialogActions sx={{ p: 3 }}>
           <Button
             onClick={() => setDeleteDialogOpen(false)}
-            className="text-gray-600"
+            sx={{ color: 'text.secondary' }}
           >
             Cancel
           </Button>
@@ -372,7 +555,10 @@ const Institutions = () => {
             onClick={handleDeleteConfirm}
             variant="contained"
             disabled={deleteLoading}
-            className="bg-error-600 hover:bg-error-700"
+            sx={{
+              bgcolor: 'error.main',
+              '&:hover': { bgcolor: 'error.dark' },
+            }}
           >
             {deleteLoading ? 'Deleting...' : 'Delete'}
           </Button>
@@ -393,7 +579,7 @@ const Institutions = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </div>
+    </Box>
   )
 }
 

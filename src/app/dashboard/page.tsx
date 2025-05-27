@@ -12,6 +12,7 @@ import {
   Button,
   Chip,
   CircularProgress,
+  useTheme as useMuiTheme,
 } from '@mui/material'
 import {
   School as SchoolIcon,
@@ -34,70 +35,55 @@ interface Institution {
   updatedAt: string
 }
 
-interface User {
-  _id: string
-  email: string
-  firstName: string
-  lastName: string
-  verified: boolean
-  createdAt: string
-  updatedAt: string
-}
-
 export default function DashboardPage() {
   const [institutions, setInstitutions] = useState<Institution[]>([])
-  const [users, setUsers] = useState<User[]>([])
   const [stats, setStats] = useState({
     totalCategories: 0,
-    totalUsers: 0,
-    verifiedUsers: 0,
     avgPromptLength: 0,
   })
+  const theme = useMuiTheme() // Use MUI theme hook instead of custom
 
+  // Create stable API function reference
   const [getInstitutions, institutionsLoading] = useMutateApi({
     apiPath: `/category/get-Categories`,
     method: 'GET',
   })
 
-  const [getUserStats, userStatsLoading] = useMutateApi({
-    apiPath: `/sessions/checkAccessToken`,
-    method: 'POST',
-  })
-
-  const fetchDashboardData = async () => {
-    try {
-      const institutionsResponse = await getInstitutions({})
-
-      if (institutionsResponse && institutionsResponse.error === null) {
-        const institutionData = institutionsResponse.data || []
-        setInstitutions(institutionData)
-
-        const totalCategories = institutionData.length
-        const totalPromptChars = institutionData.reduce(
-          (acc: number, inst: Institution) =>
-            acc + (inst.systemPrompt?.length || 0),
-          0,
-        )
-        const avgPromptLength =
-          totalCategories > 0
-            ? Math.round(totalPromptChars / totalCategories)
-            : 0
-
-        setStats((prev) => ({
-          ...prev,
-          totalCategories,
-          avgPromptLength,
-        }))
-      }
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error)
-    }
-  }
-
+  // Fetch data only once on component mount
   useEffect(() => {
-    fetchDashboardData()
-  }, [])
+    const fetchData = async () => {
+      try {
+        const institutionsResponse = await getInstitutions({})
 
+        if (institutionsResponse && institutionsResponse.error === null) {
+          const institutionData = institutionsResponse.data || []
+          setInstitutions(institutionData)
+
+          const totalCategories = institutionData.length
+          const totalPromptChars = institutionData.reduce(
+            (acc: number, inst: Institution) =>
+              acc + (inst.systemPrompt?.length || 0),
+            0,
+          )
+          const avgPromptLength =
+            totalCategories > 0
+              ? Math.round(totalPromptChars / totalCategories)
+              : 0
+
+          setStats({
+            totalCategories,
+            avgPromptLength,
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      }
+    }
+
+    fetchData()
+  }, []) // Empty dependency array - only run once on mount
+
+  // Generate recent activity from institutions data
   const getRecentActivity = () => {
     interface Activity {
       action: string
@@ -116,7 +102,7 @@ export default function DashboardPage() {
       )
       .slice(0, 5)
 
-    recentInstitutions.forEach((institution, index) => {
+    recentInstitutions.forEach((institution, _index) => {
       const updatedDate = new Date(institution.updatedAt)
       const createdDate = new Date(institution.createdAt)
       const now = new Date()
@@ -154,15 +140,13 @@ export default function DashboardPage() {
     {
       title: 'Total Categories',
       value: stats.totalCategories.toString(),
-      icon: <SchoolIcon className="text-primary-600" />,
-      color: 'bg-primary-50 border-primary-200',
+      icon: <SchoolIcon sx={{ color: 'primary.main' }} />,
       subtitle: 'Institution categories',
     },
     {
       title: 'Avg Prompt Length',
       value: stats.avgPromptLength.toString(),
-      icon: <ChatIcon className="text-success-600" />,
-      color: 'bg-success-50 border-success-200',
+      icon: <ChatIcon sx={{ color: 'success.main' }} />,
       subtitle: 'Characters per prompt',
     },
     {
@@ -170,71 +154,108 @@ export default function DashboardPage() {
       value: institutions
         .filter((inst) => inst.systemPrompt && inst.systemPrompt.length > 0)
         .length.toString(),
-      icon: <TrendingUpIcon className="text-info-600" />,
-      color: 'bg-info-50 border-info-200',
+      icon: <TrendingUpIcon sx={{ color: 'info.main' }} />,
       subtitle: 'With system prompts',
     },
     {
       title: 'System Status',
       value: '99.9%',
-      icon: <PeopleIcon className="text-warning-600" />,
-      color: 'bg-warning-50 border-warning-200',
+      icon: <PeopleIcon sx={{ color: 'warning.main' }} />,
       subtitle: 'Uptime this month',
     },
   ]
 
   if (institutionsLoading) {
     return (
-      <Box component="main" className="p-6">
-        <div className="flex justify-center items-center h-64">
+      <Box component="main" sx={{ p: 3 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '256px',
+          }}
+        >
           <CircularProgress />
-          <Typography variant="body1" className="ml-4 text-gray-500">
+          <Typography variant="body1" sx={{ ml: 2, color: 'text.secondary' }}>
             Loading dashboard data...
           </Typography>
-        </div>
+        </Box>
       </Box>
     )
   }
 
   return (
-    <Box component="main" className="p-6">
+    <Box component="main" sx={{ p: 3 }}>
       {/* Header */}
-      <div className="mb-8">
-        <Typography variant="h4" className="text-gray-800 font-bold mb-2">
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="h4"
+          sx={{
+            color: 'text.primary',
+            fontWeight: 'bold',
+            mb: 1,
+          }}
+        >
           Dashboard Overview
         </Typography>
-        <Typography variant="body1" className="text-gray-600">
+        <Typography variant="body1" sx={{ color: 'text.secondary' }}>
           Real-time statistics and system monitoring for UniBot
         </Typography>
-      </div>
+      </Box>
 
       {/* Stats Grid */}
-      <Grid container spacing={3} className="mb-8">
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         {statsData.map((stat, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
             <Card
-              className={`h-full shadow-md hover:shadow-lg transition-shadow duration-200 border ${stat.color}`}
+              sx={{
+                height: '100%',
+                transition: 'box-shadow 0.2s',
+                '&:hover': {
+                  boxShadow: theme.shadows[8],
+                },
+              }}
             >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Typography variant="body2" className="text-gray-600 mb-1">
+              <CardContent sx={{ p: 3 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: 'text.secondary', mb: 0.5 }}
+                    >
                       {stat.title}
                     </Typography>
                     <Typography
                       variant="h4"
-                      className="font-bold text-gray-800"
+                      sx={{ fontWeight: 'bold', color: 'text.primary' }}
                     >
                       {stat.value}
                     </Typography>
-                    <Typography variant="caption" className="text-gray-500">
+                    <Typography
+                      variant="caption"
+                      sx={{ color: 'text.secondary' }}
+                    >
                       {stat.subtitle}
                     </Typography>
-                  </div>
-                  <div className="p-3 rounded-full bg-white shadow-sm">
+                  </Box>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: '50%',
+                      bgcolor: 'background.paper',
+                      boxShadow: 1,
+                    }}
+                  >
                     {stat.icon}
-                  </div>
-                </div>
+                  </Box>
+                </Box>
               </CardContent>
             </Card>
           </Grid>
@@ -242,28 +263,40 @@ export default function DashboardPage() {
       </Grid>
 
       {/* Quick Actions */}
-      <Paper className="p-6 mb-8 shadow-md rounded-lg">
-        <Typography variant="h5" className="text-gray-800 font-bold mb-4">
+      <Paper sx={{ p: 3, mb: 4 }}>
+        <Typography
+          variant="h5"
+          sx={{ color: 'text.primary', fontWeight: 'bold', mb: 2 }}
+        >
           Quick Actions
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={4}>
-            <Card className="h-full shadow-sm hover:shadow-md transition-shadow duration-200 border-l-4 border-primary-500">
-              <CardContent className="p-4">
-                <Typography variant="h6" className="text-gray-800 mb-2">
+            <Card
+              sx={{
+                height: '100%',
+                transition: 'box-shadow 0.2s',
+                borderLeft: 4,
+                borderLeftColor: 'primary.main',
+                '&:hover': {
+                  boxShadow: theme.shadows[4],
+                },
+              }}
+            >
+              <CardContent sx={{ p: 2 }}>
+                <Typography variant="h6" sx={{ color: 'text.primary', mb: 1 }}>
                   Manage Categories
                 </Typography>
-                <Typography variant="body2" className="text-gray-600 mb-4">
+                <Typography
+                  variant="body2"
+                  sx={{ color: 'text.secondary', mb: 2 }}
+                >
                   View, edit, and organize your institution categories
                 </Typography>
               </CardContent>
-              <CardActions className="p-4 pt-0">
-                <Link href="/dashboard/institutions" className="w-full">
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    className="bg-primary-600 hover:bg-primary-700"
-                  >
+              <CardActions sx={{ p: 2, pt: 0 }}>
+                <Link href="/dashboard/institutions" style={{ width: '100%' }}>
+                  <Button variant="contained" fullWidth color="primary">
                     View Categories
                   </Button>
                 </Link>
@@ -272,22 +305,38 @@ export default function DashboardPage() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={4}>
-            <Card className="h-full shadow-sm hover:shadow-md transition-shadow duration-200 border-l-4 border-success-500">
-              <CardContent className="p-4">
-                <Typography variant="h6" className="text-gray-800 mb-2">
+            <Card
+              sx={{
+                height: '100%',
+                transition: 'box-shadow 0.2s',
+                borderLeft: 4,
+                borderLeftColor: 'success.main',
+                '&:hover': {
+                  boxShadow: theme.shadows[4],
+                },
+              }}
+            >
+              <CardContent sx={{ p: 2 }}>
+                <Typography variant="h6" sx={{ color: 'text.primary', mb: 1 }}>
                   Add New Category
                 </Typography>
-                <Typography variant="body2" className="text-gray-600 mb-4">
+                <Typography
+                  variant="body2"
+                  sx={{ color: 'text.secondary', mb: 2 }}
+                >
                   Create a new institution category for the chatbot
                 </Typography>
               </CardContent>
-              <CardActions className="p-4 pt-0">
-                <Link href="/dashboard/add-institution" className="w-full">
+              <CardActions sx={{ p: 2, pt: 0 }}>
+                <Link
+                  href="/dashboard/add-institution"
+                  style={{ width: '100%' }}
+                >
                   <Button
                     variant="contained"
                     fullWidth
                     startIcon={<AddIcon />}
-                    className="bg-success-600 hover:bg-success-700"
+                    color="success"
                   >
                     Add Category
                   </Button>
@@ -297,22 +346,31 @@ export default function DashboardPage() {
           </Grid>
 
           <Grid item xs={12} sm={6} md={4}>
-            <Card className="h-full shadow-sm hover:shadow-md transition-shadow duration-200 border-l-4 border-info-500">
-              <CardContent className="p-4">
-                <Typography variant="h6" className="text-gray-800 mb-2">
+            <Card
+              sx={{
+                height: '100%',
+                transition: 'box-shadow 0.2s',
+                borderLeft: 4,
+                borderLeftColor: 'info.main',
+                '&:hover': {
+                  boxShadow: theme.shadows[4],
+                },
+              }}
+            >
+              <CardContent sx={{ p: 2 }}>
+                <Typography variant="h6" sx={{ color: 'text.primary', mb: 1 }}>
                   Test Chatbot
                 </Typography>
-                <Typography variant="body2" className="text-gray-600 mb-4">
+                <Typography
+                  variant="body2"
+                  sx={{ color: 'text.secondary', mb: 2 }}
+                >
                   Interact with the UniBot to test functionality
                 </Typography>
               </CardContent>
-              <CardActions className="p-4 pt-0">
-                <Link href="/chatbot" className="w-full">
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    className="border-info-500 text-info-600 hover:bg-info-50"
-                  >
+              <CardActions sx={{ p: 2, pt: 0 }}>
+                <Link href="/chatbot" style={{ width: '100%' }}>
+                  <Button variant="outlined" fullWidth color="info">
                     Open Chatbot
                   </Button>
                 </Link>
@@ -323,52 +381,66 @@ export default function DashboardPage() {
       </Paper>
 
       {/* Recent Activity */}
-      <Paper className="p-6 shadow-md rounded-lg">
-        <Typography variant="h5" className="text-gray-800 font-bold mb-4">
+      <Paper sx={{ p: 3 }}>
+        <Typography
+          variant="h5"
+          sx={{ color: 'text.primary', fontWeight: 'bold', mb: 2 }}
+        >
           Recent Activity
         </Typography>
         {institutions.length > 0 ? (
-          <div className="space-y-4">
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {getRecentActivity().map((activity, index) => (
-              <div
+              <Box
                 key={index}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  p: 2,
+                  bgcolor: 'action.hover',
+                  borderRadius: 1,
+                  transition: 'background-color 0.2s',
+                  '&:hover': {
+                    bgcolor: 'action.selected',
+                  },
+                }}
               >
-                <div className="flex items-center gap-3">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                   <Chip
                     label={activity.status === 'success' ? 'New' : 'Updated'}
                     size="small"
-                    className={`
-                      ${activity.status === 'success' ? 'bg-success-100 text-success-800' : ''}
-                      ${activity.status === 'info' ? 'bg-info-100 text-info-800' : ''}
-                      ${activity.status === 'warning' ? 'bg-warning-100 text-warning-800' : ''}
-                    `}
+                    color={activity.status === 'success' ? 'success' : 'info'}
+                    variant="outlined"
                   />
-                  <div>
+                  <Box>
                     <Typography
                       variant="body2"
-                      className="text-gray-800 font-medium"
+                      sx={{ color: 'text.primary', fontWeight: 'medium' }}
                     >
                       {activity.action}: {activity.item}
                     </Typography>
-                    <Typography variant="caption" className="text-gray-600">
+                    <Typography
+                      variant="caption"
+                      sx={{ color: 'text.secondary' }}
+                    >
                       {activity.description}
                     </Typography>
-                  </div>
-                </div>
-                <Typography variant="caption" className="text-gray-500">
+                  </Box>
+                </Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   {activity.time}
                 </Typography>
-              </div>
+              </Box>
             ))}
-          </div>
+          </Box>
         ) : (
-          <div className="text-center py-8">
-            <Typography variant="body2" className="text-gray-500">
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               No recent activity. Create your first category to see activity
               here.
             </Typography>
-          </div>
+          </Box>
         )}
       </Paper>
     </Box>

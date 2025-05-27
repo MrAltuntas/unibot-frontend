@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   TextField,
   Button,
@@ -10,15 +11,11 @@ import {
   InputAdornment,
   IconButton,
   Divider,
-  Box,
   Card,
   CardContent,
-  Fade,
-  Slide,
+  Alert,
   Avatar,
   Chip,
-  Zoom,
-  Grow,
 } from '@mui/material'
 import EmailIcon from '@mui/icons-material/Email'
 import VisibilityIcon from '@mui/icons-material/Visibility'
@@ -30,7 +27,6 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import TrendingUpIcon from '@mui/icons-material/TrendingUp'
 import SecurityIcon from '@mui/icons-material/Security'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import useMutateApi from '@/Hooks/useMutateApi'
 import { deleteCookie, setCookie } from 'cookies-next'
 import { useAuth } from '@/context/AuthContext'
@@ -50,6 +46,8 @@ const initialValues: TLoginForm = {
 const LoginPage = () => {
   const { setUserData } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const message = searchParams?.get('message') || null
 
   const {
     control,
@@ -111,7 +109,7 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="auth-page min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       {/* Simplified Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-pulse"></div>
@@ -261,8 +259,18 @@ const LoginPage = () => {
         {/* Enhanced Right Form Column */}
         <div className="flex-1 flex items-center justify-center p-8 lg:p-16">
           {isVisible && (
-            <Card className="w-full max-w-lg bg-white/95 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden transform hover:shadow-3xl transition-all duration-800 ease-in-out opacity-100 scale-100">
+            <Card className="w-full max-w-lg bg-white/95 backdrop-blur-xl border-0 shadow-2xl rounded-3xl overflow-hidden">
               <CardContent className="p-10 lg:p-12">
+                {/* Show message if present */}
+                {message && (
+                  <Alert
+                    severity={message.includes('success') ? 'success' : 'info'}
+                    className="mb-6"
+                  >
+                    {message}
+                  </Alert>
+                )}
+
                 {/* Form Header */}
                 <div className="text-center mb-10">
                   {animationStage >= 1 && (
