@@ -216,7 +216,11 @@ const Chatbot = () => {
                 </div>
               </div>
               <button
-                onClick={() => setShowChat(false)}
+                onClick={()=> {
+                  setShowChat(false);
+                  setChatLog([]);
+                  return;
+                }}
                 className="text-white hover:bg-white/20 rounded-full p-1 transition-colors"
               >
                 <CloseIcon style={{ fontSize: '20px' }} />
