@@ -9,7 +9,7 @@ interface IPostApiState {
 }
 interface IMutateProps {
   apiPath?: string
-  method?: 'PUT' | 'DELETE' | 'POST' | 'GET'
+  method?: 'PUT' | 'DELETE' | 'POST' | 'GET' | 'PATCH'
   header?: object
   baseURL?: string
   withCredentials?: boolean

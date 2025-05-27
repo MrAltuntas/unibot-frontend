@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Box,
   CssBaseline,
@@ -22,9 +22,10 @@ import {
   Button,
   Card,
   CardContent,
-  useTheme,
   useMediaQuery,
   Collapse,
+  useTheme as useMuiTheme,
+  TextField,
 } from '@mui/material'
 import {
   Menu as MenuIcon,
@@ -43,10 +44,17 @@ import {
   Brightness4 as DarkModeIcon,
   Brightness7 as LightModeIcon,
   ChevronLeft as ChevronLeftIcon,
+  CheckCircle as SuccessIcon,
+  Error as ErrorIcon,
+  Info as InfoIcon,
+  Warning as WarningIcon,
+  Circle as CircleIcon,
 } from '@mui/icons-material'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { useTheme } from '@/context/ThemeContext'
+import useMutateApi from '@/Hooks/useMutateApi'
 
 const drawerWidth = 280
 const miniDrawerWidth = 64
@@ -91,6 +99,20 @@ const menuItems = [
   },
 ]
 
+interface Notification {
+  _id: string
+  type: 'success' | 'error' | 'warning' | 'info'
+  title: string
+  message: string
+  isRead: boolean
+  createdAt: string
+  category?: string
+  action?: {
+    type: 'view' | 'edit' | 'delete'
+    url?: string
+  }
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -98,7 +120,6 @@ export default function DashboardLayout({
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [desktopOpen, setDesktopOpen] = useState(true)
-  const [loading, setLoading] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [notificationAnchor, setNotificationAnchor] =
     useState<null | HTMLElement>(null)
@@ -107,35 +128,206 @@ export default function DashboardLayout({
   }>({
     'Institution Management': true,
   })
-  const [darkMode, setDarkMode] = useState(false)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const { user, isAuthenticated, isLoading, logout } = useAuth()
+  const { darkMode, toggleDarkMode } = useTheme()
+  const muiTheme = useMuiTheme()
+  const router = useRouter()
 
-  const { userData, logout } = useAuth() // Make sure to destructure logout from useAuth
+  // Add API hooks for notifications
+  const [getNotifications, notificationsLoading] = useMutateApi({
+    apiPath: '/notifications/get-notifications',
+    method: 'GET',
+  })
+  const [markAsRead] = useMutateApi({
+    apiPath: '/notifications/mark-as-read',
+    method: 'PATCH',
+  })
+  const [markAllAsRead, markAllAsReadLoading] = useMutateApi({
+    apiPath: '/notifications/mark-all-as-read',
+    method: 'PATCH',
+  })
+
+  // Mock notifications fallback
+  const getMockNotifications = (): Notification[] => [
+    {
+      _id: '1',
+      type: 'success',
+      title: 'New category created',
+      message:
+        'Computer Science Department category has been successfully created',
+      isRead: false,
+      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      category: 'Institution Management',
+    },
+    {
+      _id: '2',
+      title: 'System update completed',
+      message: 'All services are running normally and performing optimally',
+      type: 'info',
+      isRead: false,
+      createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+      category: 'System',
+    },
+    {
+      _id: '3',
+      title: 'New user registered',
+      message: 'A new student has registered and been granted portal access',
+      type: 'info',
+      isRead: false,
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      category: 'User Management',
+    },
+    {
+      _id: '4',
+      title: 'Backup completed successfully',
+      message: 'Weekly data backup has been completed without any issues',
+      type: 'success',
+      isRead: true,
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      category: 'System',
+    },
+    {
+      _id: '5',
+      title: 'High response time detected',
+      message: 'Some queries are taking longer than usual to process',
+      type: 'warning',
+      isRead: true,
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      category: 'Performance',
+    },
+  ]
+
+  // Initialize notifications with mock data and load from API
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    // Set mock data first
+    const mockNotifications = getMockNotifications()
+    setNotifications(mockNotifications)
+    setUnreadCount(mockNotifications.filter((notif) => !notif.isRead).length)
+
+    // Then try to load from API
+    const loadNotifications = async () => {
+      try {
+        const response = await getNotifications({})
+        if (response.error === null && response.data) {
+          setNotifications(response.data)
+          const unread = response.data.filter(
+            (notif: Notification) => !notif.isRead,
+          ).length
+          setUnreadCount(unread)
+        }
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error)
+        // Keep mock data on error
+      }
+    }
+
+    loadNotifications()
+
+    // Set up polling for new notifications every 30 seconds
+    const interval = setInterval(loadNotifications, 30000)
+    return () => clearInterval(interval)
+  }, [isAuthenticated]) // Remove getNotifications from dependencies
+
+  // Format time ago
+  const getTimeAgo = (dateString: string) => {
+    const now = new Date()
+    const date = new Date(dateString)
+    const diffInMs = now.getTime() - date.getTime()
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
+    const diffInDays = Math.floor(diffInHours / 24)
+
+    if (diffInHours < 1) {
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
+      return `${diffInMinutes} ${
+        diffInMinutes === 1 ? 'minute' : 'minutes'
+      } ago`
+    } else if (diffInHours < 24) {
+      return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`
+    } else if (diffInDays < 7) {
+      return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`
+    } else {
+      const diffInWeeks = Math.floor(diffInDays / 7)
+      return `${diffInWeeks} ${diffInWeeks === 1 ? 'week' : 'weeks'} ago`
+    }
+  }
+
+  // Get notification icon
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'success':
+        return <SuccessIcon sx={{ color: '#10b981', fontSize: 20 }} />
+      case 'error':
+        return <ErrorIcon sx={{ color: '#ef4444', fontSize: 20 }} />
+      case 'warning':
+        return <WarningIcon sx={{ color: '#f59e0b', fontSize: 20 }} />
+      case 'info':
+      default:
+        return <InfoIcon sx={{ color: '#3b82f6', fontSize: 20 }} />
+    }
+  }
+
+  // Mark notification as read
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.isRead) {
+      try {
+        await markAsRead({ notificationId: notification._id })
+        setNotifications((prev) =>
+          prev.map((notif) =>
+            notif._id === notification._id ? { ...notif, isRead: true } : notif,
+          ),
+        )
+        setUnreadCount((prev) => Math.max(0, prev - 1))
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error)
+      }
+    }
+
+    // Handle action if present
+    if (notification.action?.url) {
+      router.push(notification.action.url)
+    }
+  }
+
+  // Mark all as read
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead({})
+      setNotifications((prev) =>
+        prev.map((notif) => ({ ...notif, isRead: true })),
+      )
+      setUnreadCount(0)
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error)
+    }
+  }
+
+  // Add authentication check
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login?message=Please log in to access the dashboard')
+    }
+  }, [isAuthenticated, isLoading, router])
 
   // Add logout handler
   const handleLogout = async () => {
     try {
       console.log('🚪 Logging out user...')
-
-      // Call the logout function from AuthContext
       await logout()
-
-      // Close any open menus
       setAnchorEl(null)
-
-      console.log('✅ Logout successful, redirecting...')
-
-      // Redirect to login page
-      window.location.href = '/login'
+      router.push('/login?message=You have been logged out successfully')
     } catch (error) {
       console.error('❌ Logout error:', error)
-      // Even if logout fails, redirect to login
-      window.location.href = '/login'
+      router.push('/login')
     }
   }
 
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'))
   const pathname = usePathname()
+  const isDashboardPage = pathname?.startsWith('/dashboard')
 
   const getUserInitials = (firstName?: string, lastName?: string) => {
     if (!firstName || !lastName) return 'AU'
@@ -151,6 +343,36 @@ export default function DashboardLayout({
     return role || 'Administrator'
   }
 
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          bgcolor: muiTheme.palette.background.default,
+        }}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <CircularProgress sx={{ mb: 2 }} />
+          <Typography
+            variant="body2"
+            sx={{ color: muiTheme.palette.text.secondary }}
+          >
+            Authenticating...
+          </Typography>
+        </div>
+      </Box>
+    )
+  }
+
+  // Don't render dashboard if not authenticated
+  if (!isAuthenticated) {
+    return null
+  }
+
   const handleDrawerToggle = () => {
     if (isMobile) {
       setMobileOpen(!mobileOpen)
@@ -163,7 +385,7 @@ export default function DashboardLayout({
     setAnchorEl(event.currentTarget)
   }
 
-  const handleNotificationClick = (event: React.MouseEvent<HTMLElement>) => {
+  const handleNotificationMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setNotificationAnchor(event.currentTarget)
   }
 
@@ -175,6 +397,7 @@ export default function DashboardLayout({
   }
 
   const isItemActive = (href: string) => {
+    if (!pathname) return false
     return (
       pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
     )
@@ -192,7 +415,7 @@ export default function DashboardLayout({
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: '#1e293b',
+        bgcolor: darkMode ? '#1e293b' : '#1e293b', // Keep sidebar dark in both modes
       }}
     >
       {/* Logo/Brand Section */}
@@ -240,18 +463,18 @@ export default function DashboardLayout({
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <div className="flex items-center gap-3">
                 <Avatar sx={{ width: 40, height: 40, bgcolor: '#3b82f6' }}>
-                  {getUserInitials(userData?.firstName, userData?.lastName)}
+                  {getUserInitials(user?.firstName, user?.lastName)}
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <Typography
                     variant="subtitle2"
                     sx={{ color: 'white', fontWeight: 500 }}
-                    title={getFullName(userData?.firstName, userData?.lastName)}
+                    title={getFullName(user?.firstName, user?.lastName)}
                   >
-                    {getFullName(userData?.firstName, userData?.lastName)}
+                    {getFullName(user?.firstName, user?.lastName)}
                   </Typography>
                   <Typography variant="caption" sx={{ color: '#94a3b8' }}>
-                    {getUserRole(userData?.role)}
+                    {getUserRole(user?.role)}
                   </Typography>
                 </div>
                 <Chip
@@ -503,12 +726,14 @@ export default function DashboardLayout({
             xs: 0,
             md: desktopOpen ? `${drawerWidth}px` : `${miniDrawerWidth}px`,
           },
-          bgcolor: 'white',
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-          borderBottom: '1px solid #e5e7eb',
-          transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
+          bgcolor: muiTheme.palette.background.paper,
+          boxShadow: darkMode
+            ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
+            : '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+          borderBottom: `1px solid ${muiTheme.palette.divider}`,
+          transition: muiTheme.transitions.create(['width', 'margin'], {
+            easing: muiTheme.transitions.easing.sharp,
+            duration: muiTheme.transitions.duration.enteringScreen,
           }),
         }}
         elevation={0}
@@ -519,7 +744,7 @@ export default function DashboardLayout({
             aria-label="toggle drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, color: '#374151' }}
+            sx={{ mr: 2, color: muiTheme.palette.text.primary }}
           >
             {isMobile ? (
               <MenuIcon />
@@ -533,32 +758,45 @@ export default function DashboardLayout({
           {/* Page Title */}
           <Typography
             variant="h6"
-            sx={{ flexGrow: 1, color: '#111827', fontWeight: 600 }}
+            sx={{
+              flexGrow: 1,
+              color: muiTheme.palette.text.primary,
+              fontWeight: 600,
+            }}
           >
             {pathname === '/dashboard' && 'Dashboard Overview'}
             {pathname === '/dashboard/institutions' && 'Institution Categories'}
             {pathname === '/dashboard/add-institution' && 'Add New Category'}
-            {pathname.includes('/dashboard/edit-institution') &&
+            {pathname &&
+              pathname.includes('/dashboard/edit-institution') &&
               'Edit Category'}
             {pathname === '/chatbot' && 'Chatbot Interface'}
           </Typography>
 
           {/* Top Bar Actions */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {/* Theme Toggle */}
-            <IconButton
-              onClick={() => setDarkMode(!darkMode)}
-              sx={{ color: '#6b7280', '&:hover': { bgcolor: '#f3f4f6' } }}
-            >
-              {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
-            </IconButton>
+            {/* Theme Toggle - Only show on dashboard pages */}
+            {isDashboardPage && (
+              <IconButton
+                onClick={toggleDarkMode}
+                sx={{
+                  color: muiTheme.palette.text.secondary,
+                  '&:hover': { bgcolor: muiTheme.palette.action.hover },
+                }}
+              >
+                {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
+              </IconButton>
+            )}
 
-            {/* Notifications */}
+            {/* Dynamic Notifications */}
             <IconButton
-              onClick={handleNotificationClick}
-              sx={{ color: '#6b7280', '&:hover': { bgcolor: '#f3f4f6' } }}
+              onClick={handleNotificationMenuOpen}
+              sx={{
+                color: muiTheme.palette.text.secondary,
+                '&:hover': { bgcolor: muiTheme.palette.action.hover },
+              }}
             >
-              <Badge badgeContent={3} color="error">
+              <Badge badgeContent={unreadCount} color="error">
                 <NotificationsIcon />
               </Badge>
             </IconButton>
@@ -566,7 +804,7 @@ export default function DashboardLayout({
             {/* Profile Avatar */}
             <IconButton onClick={handleProfileClick} sx={{ ml: 1 }}>
               <Avatar sx={{ width: 32, height: 32, bgcolor: '#3b82f6' }}>
-                {getUserInitials(userData?.firstName, userData?.lastName)}
+                {getUserInitials(user?.firstName, user?.lastName)}
               </Avatar>
             </IconButton>
           </Box>
@@ -600,9 +838,9 @@ export default function DashboardLayout({
             boxSizing: 'border-box',
             width: currentDrawerWidth,
             border: 'none',
-            transition: theme.transitions.create('width', {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
+            transition: muiTheme.transitions.create('width', {
+              easing: muiTheme.transitions.easing.sharp,
+              duration: muiTheme.transitions.duration.enteringScreen,
             }),
             overflowX: 'hidden',
           },
@@ -627,34 +865,16 @@ export default function DashboardLayout({
             xs: 0,
             md: desktopOpen ? `${drawerWidth}px` : `${miniDrawerWidth}px`,
           },
-          bgcolor: '#f9fafb',
+          bgcolor: muiTheme.palette.background.default,
           minHeight: '100vh',
-          transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
+          transition: muiTheme.transitions.create(['width', 'margin'], {
+            easing: muiTheme.transitions.easing.sharp,
+            duration: muiTheme.transitions.duration.enteringScreen,
           }),
         }}
       >
         <Toolbar />
-        {loading ? (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '400px',
-            }}
-          >
-            <div style={{ textAlign: 'center' }}>
-              <CircularProgress sx={{ mb: 2 }} />
-              <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                Loading...
-              </Typography>
-            </div>
-          </Box>
-        ) : (
-          <Box sx={{ p: 3 }}>{children}</Box>
-        )}
+        <Box sx={{ p: 3 }}>{children}</Box>
       </Box>
 
       {/* Profile Menu */}
@@ -665,23 +885,36 @@ export default function DashboardLayout({
         PaperProps={{
           sx: {
             mt: 1,
-            boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
-            border: '1px solid #e5e7eb',
+            boxShadow: darkMode
+              ? '0 20px 25px -5px rgba(0, 0, 0, 0.4)'
+              : '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+            border: `1px solid ${muiTheme.palette.divider}`,
             minWidth: 200,
+            bgcolor: muiTheme.palette.background.paper,
           },
         }}
       >
-        <MenuItem sx={{ '&:hover': { bgcolor: '#f9fafb' } }}>
-          <PersonIcon sx={{ mr: 2, color: '#6b7280' }} />
-          Profile Settings
+        <MenuItem
+          sx={{ '&:hover': { bgcolor: muiTheme.palette.action.hover } }}
+        >
+          <PersonIcon sx={{ mr: 2, color: muiTheme.palette.text.secondary }} />
+          <Typography sx={{ color: muiTheme.palette.text.primary }}>
+            Profile Settings
+          </Typography>
         </MenuItem>
-        <MenuItem sx={{ '&:hover': { bgcolor: '#f9fafb' } }}>
-          <SettingsIcon sx={{ mr: 2, color: '#6b7280' }} />
-          Account Settings
+        <MenuItem
+          sx={{ '&:hover': { bgcolor: muiTheme.palette.action.hover } }}
+        >
+          <SettingsIcon
+            sx={{ mr: 2, color: muiTheme.palette.text.secondary }}
+          />
+          <Typography sx={{ color: muiTheme.palette.text.primary }}>
+            Account Settings
+          </Typography>
         </MenuItem>
         <Divider />
         <MenuItem
-          onClick={handleLogout} // Add onClick handler
+          onClick={handleLogout}
           sx={{ '&:hover': { bgcolor: '#fef2f2' }, color: '#dc2626' }}
         >
           <LogoutIcon sx={{ mr: 2 }} />
@@ -689,7 +922,7 @@ export default function DashboardLayout({
         </MenuItem>
       </Menu>
 
-      {/* Notifications Menu */}
+      {/* Dynamic Notifications Menu */}
       <Menu
         anchorEl={notificationAnchor}
         open={Boolean(notificationAnchor)}
@@ -697,48 +930,178 @@ export default function DashboardLayout({
         PaperProps={{
           sx: {
             mt: 1,
-            boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
-            border: '1px solid #e5e7eb',
-            minWidth: 320,
-            maxHeight: 400,
+            boxShadow: darkMode
+              ? '0 20px 25px -5px rgba(0, 0, 0, 0.4)'
+              : '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+            border: `1px solid ${muiTheme.palette.divider}`,
+            minWidth: 380,
+            maxHeight: 500,
+            maxWidth: 400,
+            bgcolor: muiTheme.palette.background.paper,
           },
         }}
       >
-        <Box sx={{ p: 2, borderBottom: '1px solid #e5e7eb' }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Notifications
-          </Typography>
+        {/* Header */}
+        <Box
+          sx={{ p: 2, borderBottom: `1px solid ${muiTheme.palette.divider}` }}
+        >
+          <div className="flex items-center justify-between">
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, color: muiTheme.palette.text.primary }}
+            >
+              Notifications
+            </Typography>
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <Chip
+                  label={`${unreadCount} new`}
+                  size="small"
+                  color="primary"
+                  sx={{ fontSize: '0.75rem' }}
+                />
+              )}
+              {unreadCount > 0 && (
+                <Button
+                  size="small"
+                  onClick={handleMarkAllAsRead}
+                  disabled={markAllAsReadLoading}
+                  sx={{ fontSize: '0.75rem' }}
+                >
+                  Mark all read
+                </Button>
+              )}
+            </div>
+          </div>
         </Box>
-        <MenuItem sx={{ '&:hover': { bgcolor: '#f9fafb' }, py: 2 }}>
-          <div>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              New category created
+
+        {/* Notifications List */}
+        {notificationsLoading ? (
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <CircularProgress size={24} />
+            <Typography
+              variant="body2"
+              sx={{ mt: 1, color: muiTheme.palette.text.secondary }}
+            >
+              Loading notifications...
             </Typography>
-            <Typography variant="caption" sx={{ color: '#6b7280' }}>
-              Computer Science Department - 2 hours ago
+          </Box>
+        ) : notifications.length > 0 ? (
+          <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
+            {notifications.slice(0, 10).map((notification) => (
+              <MenuItem
+                key={notification._id}
+                onClick={() => handleNotificationClick(notification)}
+                sx={{
+                  '&:hover': { bgcolor: muiTheme.palette.action.hover },
+                  py: 2,
+                  px: 2,
+                  borderLeft: notification.isRead
+                    ? 'none'
+                    : '3px solid #3b82f6',
+                  bgcolor: notification.isRead
+                    ? 'transparent'
+                    : darkMode
+                      ? 'rgba(59, 130, 246, 0.1)'
+                      : '#f0f9ff',
+                }}
+              >
+                <div className="flex items-start gap-3 w-full">
+                  <div className="flex-shrink-0 mt-1">
+                    {getNotificationIcon(notification.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: notification.isRead ? 400 : 600,
+                          color: notification.isRead
+                            ? muiTheme.palette.text.secondary
+                            : muiTheme.palette.text.primary,
+                        }}
+                      >
+                        {notification.title}
+                      </Typography>
+                      {!notification.isRead && (
+                        <CircleIcon
+                          sx={{ color: '#3b82f6', fontSize: 8, ml: 1 }}
+                        />
+                      )}
+                    </div>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: muiTheme.palette.text.secondary,
+                        display: 'block',
+                        mb: 1,
+                      }}
+                    >
+                      {notification.message}
+                    </Typography>
+                    <div className="flex items-center justify-between">
+                      <Typography
+                        variant="caption"
+                        sx={{ color: muiTheme.palette.text.disabled }}
+                      >
+                        {getTimeAgo(notification.createdAt)}
+                      </Typography>
+                      {notification.category && (
+                        <Chip
+                          label={notification.category}
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            fontSize: '0.65rem',
+                            height: 20,
+                            '& .MuiChip-label': { px: 1 },
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </MenuItem>
+            ))}
+          </Box>
+        ) : (
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <NotificationsIcon
+              sx={{
+                fontSize: 48,
+                color: muiTheme.palette.text.disabled,
+                mb: 2,
+              }}
+            />
+            <Typography
+              variant="body2"
+              sx={{ color: muiTheme.palette.text.secondary }}
+            >
+              No notifications yet
             </Typography>
-          </div>
-        </MenuItem>
-        <MenuItem sx={{ '&:hover': { bgcolor: '#f9fafb' }, py: 2 }}>
-          <div>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              System update completed
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#6b7280' }}>
-              All services are running normally - 5 hours ago
-            </Typography>
-          </div>
-        </MenuItem>
-        <MenuItem sx={{ '&:hover': { bgcolor: '#f9fafb' }, py: 2 }}>
-          <div>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              New user registered
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#6b7280' }}>
-              Student portal access granted - 1 day ago
-            </Typography>
-          </div>
-        </MenuItem>
+          </Box>
+        )}
+
+        {/* Footer */}
+        {notifications.length > 10 && (
+          <Box
+            sx={{
+              borderTop: `1px solid ${muiTheme.palette.divider}`,
+              p: 2,
+              textAlign: 'center',
+            }}
+          >
+            <Button
+              size="small"
+              onClick={() => {
+                setNotificationAnchor(null)
+                router.push('/dashboard/notifications')
+              }}
+            >
+              View all notifications
+            </Button>
+          </Box>
+        )}
       </Menu>
     </Box>
   )
