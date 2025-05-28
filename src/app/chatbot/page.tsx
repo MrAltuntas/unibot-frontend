@@ -5,10 +5,19 @@ import SmartToyIcon from '@mui/icons-material/SmartToy'
 import PersonIcon from '@mui/icons-material/Person'
 import SendIcon from '@mui/icons-material/Send'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import LanguageIcon from '@mui/icons-material/Language'
 import CircularProgress from '@mui/material/CircularProgress'
 import ReactMarkdown from 'react-markdown'
 import Link from 'next/link'
-import { Box, Container, Typography, Paper, Avatar, Chip } from '@mui/material'
+import {
+  Box,
+  Container,
+  Typography,
+  Paper,
+  Avatar,
+  Chip,
+  Button,
+} from '@mui/material'
 
 interface ChatMessage {
   userId: string
@@ -20,6 +29,84 @@ interface ChatMessage {
   replyTo?: string
 }
 
+interface Language {
+  code: string
+  name: string
+  flag: string
+}
+
+const languages: Language[] = [
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'pl', name: 'Polski', flag: '🇵🇱' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+]
+
+const translations = {
+  en: {
+    welcome: 'Welcome to UniBot! 👋',
+    subtitle:
+      "I'm your intelligent assistant for Wrocław University of Science and Technology. Ask me anything about university procedures, courses, or campus life!",
+    connecting: 'Connecting to UniBot...',
+    typing: 'UniBot is typing...',
+    placeholder: 'Type your message...',
+    backToHome: 'Back to Home',
+    online: 'Online',
+    offline: 'Offline',
+    retryConnection: 'Retry Connection',
+    connectionError: 'Failed to connect to chatbot. Please try again.',
+    suggestions: [
+      'Student ID Help',
+      'Course Information',
+      'Campus Services',
+      'Academic Support',
+    ],
+    selectLanguage: 'Choose your preferred language:',
+    languageSelected: 'Language changed to',
+  },
+  pl: {
+    welcome: 'Witamy w UniBot! 👋',
+    subtitle:
+      'Jestem Twoim inteligentnym asystentem Politechniki Wrocławskiej. Zapytaj mnie o procedury uniwersyteckie, kursy lub życie kampusowe!',
+    connecting: 'Łączenie z UniBot...',
+    typing: 'UniBot pisze...',
+    placeholder: 'Wpisz swoją wiadomość...',
+    backToHome: 'Powrót do strony głównej',
+    online: 'Online',
+    offline: 'Offline',
+    retryConnection: 'Ponów połączenie',
+    connectionError: 'Nie udało się połączyć z chatbotem. Spróbuj ponownie.',
+    suggestions: [
+      'Pomoc z legitymacją',
+      'Informacje o kursach',
+      'Usługi kampusowe',
+      'Wsparcie akademickie',
+    ],
+    selectLanguage: 'Wybierz preferowany język:',
+    languageSelected: 'Język zmieniony na',
+  },
+  es: {
+    welcome: '¡Bienvenido a UniBot! 👋',
+    subtitle:
+      'Soy tu asistente inteligente para la Universidad de Ciencia y Tecnología de Wrocław. ¡Pregúntame sobre procedimientos universitarios, cursos o vida en el campus!',
+    connecting: 'Conectando con UniBot...',
+    typing: 'UniBot está escribiendo...',
+    placeholder: 'Escribe tu mensaje...',
+    backToHome: 'Volver al inicio',
+    online: 'En línea',
+    offline: 'Desconectado',
+    retryConnection: 'Reintentar conexión',
+    connectionError: 'Error al conectar con el chatbot. Inténtalo de nuevo.',
+    suggestions: [
+      'Ayuda con ID estudiantil',
+      'Información de cursos',
+      'Servicios del campus',
+      'Apoyo académico',
+    ],
+    selectLanguage: 'Elige tu idioma preferido:',
+    languageSelected: 'Idioma cambiado a',
+  },
+}
+
 export default function ChatbotPage() {
   const [message, setMessage] = useState('')
   const [chatLog, setChatLog] = useState<ChatMessage[]>([])
@@ -28,6 +115,9 @@ export default function ChatbotPage() {
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [currentLanguage, setCurrentLanguage] = useState<string>('en')
+  const [hasSelectedLanguage, setHasSelectedLanguage] = useState(false)
+  const [showLanguageSelection, setShowLanguageSelection] = useState(true)
 
   const socketRef = useRef<Socket | null>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -36,6 +126,9 @@ export default function ChatbotPage() {
   )
   const username = useRef('Student')
 
+  const currentTranslations =
+    translations[currentLanguage as keyof typeof translations]
+
   // Auto-scroll to bottom
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -43,15 +136,50 @@ export default function ChatbotPage() {
     }
   }, [chatLog, isBotTyping])
 
-  // Initialize socket connection on component mount
+  // Initialize socket connection after language is selected
   useEffect(() => {
-    initializeSocket()
+    if (hasSelectedLanguage) {
+      initializeSocket()
+    }
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect()
       }
     }
-  }, [])
+  }, [hasSelectedLanguage])
+
+  const handleLanguageSelect = (languageCode: string) => {
+    setCurrentLanguage(languageCode)
+    setShowLanguageSelection(false)
+    setHasSelectedLanguage(true)
+  }
+
+  const handleLanguageChange = (languageCode: string) => {
+    const oldLanguage = currentLanguage
+    setCurrentLanguage(languageCode)
+
+    // Send language change message to backend
+    if (socketRef.current && isConnected) {
+      socketRef.current.emit('language_changed', {
+        userId: userId.current,
+        language: languageCode,
+      })
+    }
+
+    // Add language change message to chat
+    const newTranslations =
+      translations[languageCode as keyof typeof translations]
+    const languageChangeMessage: ChatMessage = {
+      userId: userId.current,
+      text: `${newTranslations.languageSelected} ${languages.find((l) => l.code === languageCode)?.name}`,
+      username: username.current,
+      timestamp: Date.now(),
+      type: 'user',
+      messageId: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    }
+    setChatLog((prev) => [...prev, languageChangeMessage])
+    setIsBotTyping(true)
+  }
 
   const initializeSocket = () => {
     if (socketRef.current?.connected) return
@@ -68,56 +196,48 @@ export default function ChatbotPage() {
 
     const socket = socketRef.current
 
-    // Connection successful
     socket.on('connect', () => {
       console.log('🔌 Connected to chatbot server')
       setIsConnected(true)
       setIsConnecting(false)
 
-      // Join chatbot session
       socket.emit('join_chatbot', {
         userId: userId.current,
         username: username.current,
+        language: currentLanguage,
       })
     })
 
-    // Chatbot connected confirmation
     socket.on('chatbot_connected', (data) => {
       console.log('🤖 Chatbot session established:', data)
     })
 
-    // Receive bot messages
     socket.on('chatbot_message', (messageData) => {
       setChatLog((prev) => [...prev, messageData])
       setIsBotTyping(false)
     })
 
-    // Message sent confirmation
     socket.on('message_sent', (messageData) => {
       setChatLog((prev) => [...prev, messageData])
     })
 
-    // Bot typing indicator
     socket.on('bot_typing', (data) => {
       setIsBotTyping(data.typing)
     })
 
-    // Error handling
     socket.on('chatbot_error', (error) => {
       console.error('Chatbot error:', error)
       setConnectionError(error.message)
       setIsBotTyping(false)
     })
 
-    // Connection error
     socket.on('connect_error', (error) => {
       console.error('Connection error:', error)
       setIsConnected(false)
       setIsConnecting(false)
-      setConnectionError('Failed to connect to chatbot. Please try again.')
+      setConnectionError(currentTranslations.connectionError)
     })
 
-    // Disconnection
     socket.on('disconnect', (reason) => {
       console.log('🔌 Disconnected from chatbot:', reason)
       setIsConnected(false)
@@ -128,10 +248,10 @@ export default function ChatbotPage() {
   const handleSendMessage = () => {
     if (message.trim() === '' || !socketRef.current || !isConnected) return
 
-    // Send message via socket
     socketRef.current.emit('user_message', {
       message: message.trim(),
       userId: userId.current,
+      language: currentLanguage,
     })
 
     setMessage('')
@@ -150,15 +270,14 @@ export default function ChatbotPage() {
 
     setSelectedCategory(categoryId)
 
-    // Send category selection to backend
     socketRef.current.emit('category_selected', {
       categoryId,
       categoryTitle,
       userId: userId.current,
       username: username.current,
+      language: currentLanguage,
     })
 
-    // Add user message to chat immediately for better UX
     const userMessage: ChatMessage = {
       userId: userId.current,
       text: `Tell me about: ${categoryTitle}`,
@@ -176,7 +295,6 @@ export default function ChatbotPage() {
     let messageContent = msg.text
     let categories = null
 
-    // Enhanced JSON parsing logic
     try {
       const parsed = JSON.parse(msg.text)
 
@@ -364,7 +482,7 @@ export default function ChatbotPage() {
                 <Box className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
                   <ArrowBackIcon className="text-gray-600" />
                   <Typography variant="body2" className="text-gray-600">
-                    Back to Home
+                    {currentTranslations.backToHome}
                   </Typography>
                 </Box>
               </Link>
@@ -381,10 +499,10 @@ export default function ChatbotPage() {
                     <Chip
                       label={
                         isConnecting
-                          ? 'Connecting...'
+                          ? currentTranslations.connecting
                           : isConnected
-                            ? 'Online'
-                            : 'Offline'
+                            ? currentTranslations.online
+                            : currentTranslations.offline
                       }
                       size="small"
                       color={isConnected ? 'success' : 'default'}
@@ -394,6 +512,26 @@ export default function ChatbotPage() {
                 </Box>
               </Box>
             </Box>
+
+            {/* Language Switcher in Header */}
+            {hasSelectedLanguage && (
+              <Box className="flex items-center gap-2">
+                {languages.map((lang) => (
+                  <Button
+                    key={lang.code}
+                    onClick={() => handleLanguageChange(lang.code)}
+                    variant={
+                      lang.code === currentLanguage ? 'contained' : 'outlined'
+                    }
+                    size="small"
+                    className="min-w-0 px-2"
+                    startIcon={<span>{lang.flag}</span>}
+                  >
+                    {lang.code.toUpperCase()}
+                  </Button>
+                ))}
+              </Box>
+            )}
 
             <Typography variant="body2" className="text-gray-600">
               WUST AI Assistant
@@ -418,7 +556,7 @@ export default function ChatbotPage() {
                 onClick={initializeSocket}
                 className="text-red-600 underline text-sm mt-1"
               >
-                Retry Connection
+                {currentTranslations.retryConnection}
               </button>
             </Box>
           )}
@@ -429,45 +567,78 @@ export default function ChatbotPage() {
               <Box className="flex items-center justify-center p-8">
                 <CircularProgress size={32} />
                 <Typography className="ml-3 text-gray-600">
-                  Connecting to UniBot...
+                  {currentTranslations.connecting}
                 </Typography>
               </Box>
             )}
 
-            {chatLog.length === 0 && !isConnecting && (
-              <Box className="text-center py-12">
+            {/* Language Selection Inside Chat */}
+            {showLanguageSelection && !isConnecting && (
+              <Box className="text-center py-8">
                 <Avatar
                   className="bg-gradient-to-br from-blue-500 to-purple-600 mx-auto mb-4"
                   sx={{ width: 80, height: 80 }}
                 >
-                  <SmartToyIcon style={{ fontSize: '40px', color: 'white' }} />
+                  <LanguageIcon style={{ fontSize: '40px', color: 'white' }} />
                 </Avatar>
                 <Typography variant="h5" className="font-bold mb-2">
                   Welcome to UniBot! 👋
                 </Typography>
-                <Typography className="text-gray-600 mb-6 max-w-md mx-auto">
-                  I&apos;m your intelligent assistant for Wrocław University of
-                  Science and Technology. Ask me anything about university
-                  procedures, courses, or campus life!
+                <Typography className="text-gray-600 mb-6">
+                  Choose your preferred language / Wybierz język / Elige tu
+                  idioma
                 </Typography>
-                <Box className="flex flex-wrap justify-center gap-2">
-                  {[
-                    'Student ID Help',
-                    'Course Information',
-                    'Campus Services',
-                    'Academic Support',
-                  ].map((suggestion) => (
-                    <Chip
-                      key={suggestion}
-                      label={suggestion}
-                      onClick={() => setMessage(suggestion)}
-                      className="cursor-pointer hover:bg-blue-50"
+
+                <Box className="flex flex-col gap-3 max-w-sm mx-auto">
+                  {languages.map((lang) => (
+                    <Button
+                      key={lang.code}
+                      onClick={() => handleLanguageSelect(lang.code)}
                       variant="outlined"
-                    />
+                      fullWidth
+                      className="p-4 text-left justify-start hover:bg-blue-50"
+                      startIcon={<span className="text-2xl">{lang.flag}</span>}
+                    >
+                      <Typography variant="h6">{lang.name}</Typography>
+                    </Button>
                   ))}
                 </Box>
               </Box>
             )}
+
+            {/* Welcome Screen */}
+            {chatLog.length === 0 &&
+              !isConnecting &&
+              hasSelectedLanguage &&
+              !showLanguageSelection && (
+                <Box className="text-center py-12">
+                  <Avatar
+                    className="bg-gradient-to-br from-blue-500 to-purple-600 mx-auto mb-4"
+                    sx={{ width: 80, height: 80 }}
+                  >
+                    <SmartToyIcon
+                      style={{ fontSize: '40px', color: 'white' }}
+                    />
+                  </Avatar>
+                  <Typography variant="h5" className="font-bold mb-2">
+                    {currentTranslations.welcome}
+                  </Typography>
+                  <Typography className="text-gray-600 mb-6 max-w-md mx-auto">
+                    {currentTranslations.subtitle}
+                  </Typography>
+                  <Box className="flex flex-wrap justify-center gap-2">
+                    {currentTranslations.suggestions.map((suggestion) => (
+                      <Chip
+                        key={suggestion}
+                        label={suggestion}
+                        onClick={() => setMessage(suggestion)}
+                        className="cursor-pointer hover:bg-blue-50"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
 
             {chatLog.map((msg, index) => renderMessage(msg, index))}
 
@@ -498,7 +669,7 @@ export default function ChatbotPage() {
                       variant="caption"
                       className="ml-2 text-gray-500"
                     >
-                      UniBot is typing...
+                      {currentTranslations.typing}
                     </Typography>
                   </div>
                 </Paper>
@@ -511,7 +682,7 @@ export default function ChatbotPage() {
             <Box className="flex items-center gap-3">
               <input
                 type="text"
-                placeholder="Type your message..."
+                placeholder={currentTranslations.placeholder}
                 className="flex-1 border border-gray-300 rounded-full py-3 px-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}

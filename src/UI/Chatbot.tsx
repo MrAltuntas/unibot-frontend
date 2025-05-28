@@ -5,6 +5,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy'
 import PersonIcon from '@mui/icons-material/Person'
 import CloseIcon from '@mui/icons-material/Close'
 import SendIcon from '@mui/icons-material/Send'
+import LanguageIcon from '@mui/icons-material/Language'
 import CircularProgress from '@mui/material/CircularProgress'
 import ReactMarkdown from 'react-markdown'
 
@@ -24,6 +25,81 @@ interface ChatMessage {
   }>
 }
 
+interface Language {
+  code: string
+  name: string
+  flag: string
+}
+
+const languages: Language[] = [
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'pl', name: 'Polski', flag: '🇵🇱' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+]
+
+const translations = {
+  en: {
+    welcome: 'Welcome to UniBot! 👋',
+    subtitle:
+      "I'm your intelligent assistant for Wrocław University of Science and Technology.",
+    connecting: 'Connecting to UniBot...',
+    typing: 'UniBot is typing...',
+    placeholder: 'Type your message...',
+    online: 'Online',
+    offline: 'Offline',
+    retryConnection: 'Retry Connection',
+    connectionError: 'Failed to connect to chatbot. Please try again.',
+    suggestions: [
+      'Student ID Help',
+      'Course Information',
+      'Campus Services',
+      'Academic Support',
+    ],
+    selectLanguage: 'Choose your language:',
+    languageSelected: 'Language changed to',
+  },
+  pl: {
+    welcome: 'Witamy w UniBot! 👋',
+    subtitle:
+      'Jestem Twoim inteligentnym asystentem Politechniki Wrocławskiej.',
+    connecting: 'Łączenie z UniBot...',
+    typing: 'UniBot pisze...',
+    placeholder: 'Wpisz swoją wiadomość...',
+    online: 'Online',
+    offline: 'Offline',
+    retryConnection: 'Ponów połączenie',
+    connectionError: 'Nie udało się połączyć z chatbotem. Spróbuj ponownie.',
+    suggestions: [
+      'Pomoc z legitymacją',
+      'Informacje o kursach',
+      'Usługi kampusowe',
+      'Wsparcie akademickie',
+    ],
+    selectLanguage: 'Wybierz język:',
+    languageSelected: 'Język zmieniony na',
+  },
+  es: {
+    welcome: '¡Bienvenido a UniBot! 👋',
+    subtitle:
+      'Soy tu asistente inteligente para la Universidad de Ciencia y Tecnología de Wrocław.',
+    connecting: 'Conectando con UniBot...',
+    typing: 'UniBot está escribiendo...',
+    placeholder: 'Escribe tu mensaje...',
+    online: 'En línea',
+    offline: 'Desconectado',
+    retryConnection: 'Reintentar conexión',
+    connectionError: 'Error al conectar con el chatbot. Inténtalo de nuevo.',
+    suggestions: [
+      'Ayuda con ID estudiantil',
+      'Información de cursos',
+      'Servicios del campus',
+      'Apoyo académico',
+    ],
+    selectLanguage: 'Elige tu idioma:',
+    languageSelected: 'Idioma cambiado a',
+  },
+}
+
 const Chatbot = () => {
   const [showChat, setShowChat] = useState(false)
   const [message, setMessage] = useState('')
@@ -33,6 +109,9 @@ const Chatbot = () => {
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectionError, setConnectionError] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [currentLanguage, setCurrentLanguage] = useState<string>('en')
+  const [hasSelectedLanguage, setHasSelectedLanguage] = useState(false)
+  const [showLanguageSelection, setShowLanguageSelection] = useState(true)
 
   const socketRef = useRef<Socket | null>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -40,6 +119,9 @@ const Chatbot = () => {
     `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
   )
   const username = useRef<string>('Student')
+
+  const currentTranslations =
+    translations[currentLanguage as keyof typeof translations]
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -50,7 +132,7 @@ const Chatbot = () => {
 
   // Initialize socket connection
   useEffect(() => {
-    if (showChat && !socketRef.current) {
+    if (showChat && hasSelectedLanguage && !socketRef.current) {
       initializeSocket()
     }
 
@@ -60,13 +142,44 @@ const Chatbot = () => {
         socketRef.current = null
       }
     }
-  }, [showChat])
+  }, [showChat, hasSelectedLanguage])
+
+  const handleLanguageSelect = (languageCode: string) => {
+    setCurrentLanguage(languageCode)
+    setShowLanguageSelection(false)
+    setHasSelectedLanguage(true)
+  }
+
+  const handleLanguageChange = (languageCode: string) => {
+    setCurrentLanguage(languageCode)
+
+    // Send language change message to backend
+    if (socketRef.current && isConnected) {
+      socketRef.current.emit('language_changed', {
+        userId: userId.current,
+        language: languageCode,
+      })
+    }
+
+    // Add language change message to chat
+    const newTranslations =
+      translations[languageCode as keyof typeof translations]
+    const languageChangeMessage: ChatMessage = {
+      userId: userId.current,
+      text: `${newTranslations.languageSelected} ${languages.find((l) => l.code === languageCode)?.name}`,
+      username: username.current,
+      timestamp: Date.now(),
+      type: 'user',
+      messageId: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    }
+    setChatLog((prev) => [...prev, languageChangeMessage])
+    setIsBotTyping(true)
+  }
 
   const initializeSocket = () => {
     setIsConnecting(true)
     setConnectionError(null)
 
-    // Initialize socket connection
     socketRef.current = io(
       process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000',
       {
@@ -76,77 +189,66 @@ const Chatbot = () => {
 
     const socket = socketRef.current
 
-    // Connection successful
     socket.on('connect', () => {
       console.log('🔌 Connected to chatbot server')
       setIsConnected(true)
       setIsConnecting(false)
 
-      // Join chatbot session
       socket.emit('join_chatbot', {
         userId: userId.current,
         username: username.current,
+        language: currentLanguage,
       })
     })
 
-    // Chatbot connected confirmation
     socket.on('chatbot_connected', (data) => {
       console.log('🤖 Chatbot session established:', data)
     })
 
-    // Receive bot messages
     socket.on('chatbot_message', (messageData: ChatMessage) => {
       setChatLog((prev) => [...prev, messageData])
+      setIsBotTyping(false)
     })
 
-    // Message sent confirmation
     socket.on('message_sent', (messageData: ChatMessage) => {
       setChatLog((prev) => [...prev, messageData])
     })
 
-    // Bot typing indicator
     socket.on('bot_typing', (data: { typing: boolean }) => {
       setIsBotTyping(data.typing)
     })
 
-    // Error handling
     socket.on('chatbot_error', (error) => {
       console.error('Chatbot error:', error)
       setConnectionError(error.message)
       setIsBotTyping(false)
     })
 
-    // Connection error
     socket.on('connect_error', (error) => {
       console.error('Connection error:', error)
       setIsConnected(false)
       setIsConnecting(false)
-      setConnectionError('Failed to connect to chatbot. Please try again.')
+      setConnectionError(currentTranslations.connectionError)
     })
 
-    // Disconnection
     socket.on('disconnect', (reason) => {
       console.log('🔌 Disconnected from chatbot:', reason)
       setIsConnected(false)
       setIsConnecting(false)
-    })
-
-    // Pong response for health check
-    socket.on('pong', (data) => {
-      console.log('📡 Ping response:', data)
     })
   }
 
   const handleSendMessage = () => {
     if (message.trim() === '' || !socketRef.current || !isConnected) return
 
-    // Send message via socket
     socketRef.current.emit('user_message', {
       message: message.trim(),
       userId: userId.current,
+      language: currentLanguage,
     })
 
     setMessage('')
+    setIsBotTyping(true)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -156,26 +258,19 @@ const Chatbot = () => {
     }
   }
 
-  const pingServer = () => {
-    if (socketRef.current) {
-      socketRef.current.emit('ping', { clientTime: Date.now() })
-    }
-  }
-
   const handleCategoryClick = (categoryId: string, categoryTitle: string) => {
     if (!socketRef.current || !isConnected) return
 
     setSelectedCategory(categoryId)
 
-    // Send category selection to backend
     socketRef.current.emit('category_selected', {
       categoryId,
       categoryTitle,
       userId: userId.current,
       username: username.current,
+      language: currentLanguage,
     })
 
-    // Add user message to chat immediately for better UX
     const userMessage: ChatMessage = {
       userId: userId.current,
       text: `Tell me about: ${categoryTitle}`,
@@ -193,7 +288,6 @@ const Chatbot = () => {
     let messageContent = msg.text
     let categories = null
 
-    // Enhanced JSON parsing logic (keep existing logic)
     try {
       const parsed = JSON.parse(msg.text)
 
@@ -207,7 +301,6 @@ const Chatbot = () => {
         messageContent = msg.text
       }
     } catch (parseError) {
-      // Existing JSON parsing fallback logic...
       messageContent = msg.text
     }
 
@@ -274,7 +367,6 @@ const Chatbot = () => {
                         {children}
                       </code>
                     ),
-                    // Enhanced table rendering
                     table: ({ children }) => (
                       <div className="overflow-x-auto my-4">
                         <table className="min-w-full border-collapse border border-gray-300 text-xs">
@@ -299,12 +391,6 @@ const Chatbot = () => {
                         {children}
                       </td>
                     ),
-                    // Handle code blocks
-                    pre: ({ children }) => (
-                      <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto my-2">
-                        {children}
-                      </pre>
-                    ),
                   }}
                 >
                   {messageContent}
@@ -325,7 +411,7 @@ const Chatbot = () => {
             </p>
           </div>
 
-          {/* Category Buttons - Only show if categories exist and are valid */}
+          {/* Category Buttons */}
           {categories && categories.length > 0 && (
             <div className="mt-3 space-y-2">
               {categories
@@ -369,37 +455,13 @@ const Chatbot = () => {
 
   return (
     <>
-      {/* Typing dots animation */}
-      <style jsx>{`
-        @keyframes typingDots {
-          0% {
-            content: 'UniBot is typing.';
-          }
-          33% {
-            content: 'UniBot is typing..';
-          }
-          66% {
-            content: 'UniBot is typing...';
-          }
-          100% {
-            content: 'UniBot is typing.';
-          }
-        }
-
-        .typing-dots::after {
-          display: inline-block;
-          content: 'UniBot is typing.';
-          animation: typingDots 1s steps(3, end) infinite;
-        }
-      `}</style>
-
       {/* Chatbot trigger icon */}
       <div
         onClick={() => setShowChat(!showChat)}
         className="fixed right-6 bottom-6 w-14 h-14 flex items-center justify-center shadow-lg hover:cursor-pointer bg-gradient-to-br from-blue-500 to-purple-600 rounded-full hover:shadow-xl transition-all duration-300 hover:scale-105 z-50"
       >
         <SmartToyIcon style={{ fontSize: '28px', color: 'white' }} />
-        {!isConnected && showChat && (
+        {!isConnected && showChat && hasSelectedLanguage && (
           <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white"></div>
         )}
         {isConnected && (
@@ -420,18 +482,43 @@ const Chatbot = () => {
                   <h3 className="font-semibold">UniBot</h3>
                   <p className="text-xs opacity-90">
                     {isConnecting
-                      ? 'Connecting...'
+                      ? currentTranslations.connecting
                       : isConnected
-                        ? 'Online'
-                        : 'Offline'}
+                        ? currentTranslations.online
+                        : currentTranslations.offline}
                   </p>
                 </div>
               </div>
+
+              {/* Language Switcher in Header */}
+              {hasSelectedLanguage && (
+                <div className="flex items-center gap-1 mr-2">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      className={`px-2 py-1 rounded text-xs ${
+                        lang.code === currentLanguage
+                          ? 'bg-white/30 text-white'
+                          : 'bg-white/10 text-white/70 hover:bg-white/20'
+                      }`}
+                    >
+                      {lang.flag}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <button
                 onClick={() => {
                   setShowChat(false)
                   setChatLog([])
-                  return
+                  setShowLanguageSelection(true)
+                  setHasSelectedLanguage(false)
+                  if (socketRef.current) {
+                    socketRef.current.disconnect()
+                    socketRef.current = null
+                  }
                 }}
                 className="text-white hover:bg-white/20 rounded-full p-1 transition-colors"
               >
@@ -447,7 +534,7 @@ const Chatbot = () => {
                   onClick={initializeSocket}
                   className="text-red-600 underline text-sm mt-1"
                 >
-                  Retry Connection
+                  {currentTranslations.retryConnection}
                 </button>
               </div>
             )}
@@ -457,14 +544,76 @@ const Chatbot = () => {
               ref={chatContainerRef}
               className="flex flex-col flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50"
             >
-              {isConnecting && (
+              {isConnecting && hasSelectedLanguage && (
                 <div className="flex items-center justify-center p-4">
                   <CircularProgress size={24} />
                   <span className="ml-2 text-gray-600">
-                    Connecting to UniBot...
+                    {currentTranslations.connecting}
                   </span>
                 </div>
               )}
+
+              {/* Language Selection Inside Chat */}
+              {showLanguageSelection && !isConnecting && (
+                <div className="text-center py-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <LanguageIcon
+                      style={{ fontSize: '24px', color: 'white' }}
+                    />
+                  </div>
+                  <h3 className="font-semibold mb-2">
+                    {currentTranslations.welcome}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {currentTranslations.selectLanguage}
+                  </p>
+
+                  <div className="space-y-2">
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => handleLanguageSelect(lang.code)}
+                        className="w-full flex items-center justify-start gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-blue-50 transition-colors"
+                      >
+                        <span className="text-xl">{lang.flag}</span>
+                        <span className="font-medium">{lang.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Welcome Screen */}
+              {chatLog.length === 0 &&
+                !isConnecting &&
+                hasSelectedLanguage &&
+                !showLanguageSelection && (
+                  <div className="text-center py-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <SmartToyIcon
+                        style={{ fontSize: '24px', color: 'white' }}
+                      />
+                    </div>
+                    <h3 className="font-semibold mb-2">
+                      {currentTranslations.welcome}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      {currentTranslations.subtitle}
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {currentTranslations.suggestions.map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          onClick={() => setMessage(suggestion)}
+                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs hover:bg-blue-200 transition-colors"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
               {chatLog.map((msg, index) => renderMessage(msg, index))}
 
@@ -477,48 +626,37 @@ const Chatbot = () => {
                     />
                   </div>
                   <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm p-3">
-                    <p className="text-gray-500 text-sm typing-dots"></p>
+                    <p className="text-gray-500 text-sm">
+                      {currentTranslations.typing}
+                    </p>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-gray-200 bg-white">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Type your message..."
-                  className="flex-1 border border-gray-300 rounded-full py-2 px-4 text-sm focus:outline-none focus:border-blue-500"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  disabled={!isConnected}
-                />
-                <button
-                  onClick={handleSendMessage}
-                  disabled={!isConnected || message.trim() === ''}
-                  className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-200"
-                >
-                  <SendIcon style={{ fontSize: '16px' }} />
-                </button>
-              </div>
-
-              {/* Debug controls (remove in production) */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="mt-2 flex gap-2">
+            {hasSelectedLanguage && !showLanguageSelection && (
+              <div className="p-4 border-t border-gray-200 bg-white">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder={currentTranslations.placeholder}
+                    className="flex-1 border border-gray-300 rounded-full py-2 px-4 text-sm focus:outline-none focus:border-blue-500"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    disabled={!isConnected}
+                  />
                   <button
-                    onClick={pingServer}
-                    className="text-xs bg-gray-100 px-2 py-1 rounded"
+                    onClick={handleSendMessage}
+                    disabled={!isConnected || message.trim() === ''}
+                    className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-200"
                   >
-                    Ping
+                    <SendIcon style={{ fontSize: '16px' }} />
                   </button>
-                  <span className="text-xs text-gray-500">
-                    Status: {isConnected ? 'Connected' : 'Disconnected'}
-                  </span>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
